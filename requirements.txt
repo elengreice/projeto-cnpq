@@ -1,8 +1,10 @@
 streamlit
 pandas
 plotly
+plotly-express
 requests
 beautifulsoup4
 fpdf2
 groq
 python-dotenv
+lxml
