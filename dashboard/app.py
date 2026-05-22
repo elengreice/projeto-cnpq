@@ -15,45 +15,52 @@ st.set_page_config(page_title="Pesquisadores CNPq", layout="wide")
 st.title("Dashboard - Pesquisadores CNPq")
 
 # ── Função que busca os dados direto do CNPq ────────────────────────
+# @st.cache_data(ttl=3600)
+# def carregar_dados():
+#     URL = (
+#         "http://plsql1.cnpq.br/divulg/RESULTADO_PQ_102003.prc_comp_cmt_links"
+#         "?V_COD_DEMANDA=200310&V_TPO_RESULT=CURSO"
+#         "&V_COD_AREA_CONHEC=10300007&V_COD_CMT_ASSESSOR=CC"
+#     )
+#     HEADERS = {
+#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+#     }
+
+#     with st.spinner("Buscando dados do CNPq..."):
+#         response = requests.get(URL, headers=HEADERS, timeout=30)
+#         response.encoding = "latin-1"
+#         soup = BeautifulSoup(response.text, "html.parser")
+
+#         tabelas = soup.find_all("table")
+#         pesquisadores = []
+
+#         for tabela in tabelas:
+#             linhas = tabela.find_all("tr")
+#             for linha in linhas:
+#                 colunas = linha.find_all("td")
+#                 if len(colunas) >= 6:
+#                     nome = colunas[0].text.strip()
+#                     nivel = colunas[1].text.strip()
+#                     if nome and nivel and nome.upper() != "NOME":
+#                         pesquisadores.append({
+#                             "nome":             nome,
+#                             "nivel":            nivel,
+#                             "vigencia_inicio":  colunas[2].text.strip(),
+#                             "vigencia_termino": colunas[3].text.strip(),
+#                             "instituicao":      colunas[4].text.strip(),
+#                             "situacao":         colunas[5].text.strip(),
+#                         })
+
+#         df = pd.DataFrame(pesquisadores)
+#         df = df.drop_duplicates(subset=["nome"])
+#         return df
+
+# ── Função que busca os dados do CNPq no CSV  ────────────────────────
 @st.cache_data(ttl=3600)
 def carregar_dados():
-    URL = (
-        "http://plsql1.cnpq.br/divulg/RESULTADO_PQ_102003.prc_comp_cmt_links"
-        "?V_COD_DEMANDA=200310&V_TPO_RESULT=CURSO"
-        "&V_COD_AREA_CONHEC=10300007&V_COD_CMT_ASSESSOR=CC"
-    )
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-    }
-
-    with st.spinner("Buscando dados do CNPq..."):
-        response = requests.get(URL, headers=HEADERS, timeout=30)
-        response.encoding = "latin-1"
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        tabelas = soup.find_all("table")
-        pesquisadores = []
-
-        for tabela in tabelas:
-            linhas = tabela.find_all("tr")
-            for linha in linhas:
-                colunas = linha.find_all("td")
-                if len(colunas) >= 6:
-                    nome = colunas[0].text.strip()
-                    nivel = colunas[1].text.strip()
-                    if nome and nivel and nome.upper() != "NOME":
-                        pesquisadores.append({
-                            "nome":             nome,
-                            "nivel":            nivel,
-                            "vigencia_inicio":  colunas[2].text.strip(),
-                            "vigencia_termino": colunas[3].text.strip(),
-                            "instituicao":      colunas[4].text.strip(),
-                            "situacao":         colunas[5].text.strip(),
-                        })
-
-        df = pd.DataFrame(pesquisadores)
-        df = df.drop_duplicates(subset=["nome"])
-        return df
+    url_csv = "https://raw.githubusercontent.com/elengreice/projeto-cnpq/main/data/dataset.csv"
+    df = pd.read_csv(url_csv)
+    return df
 
 # ── Carrega os dados ────────────────────────────────────────────────
 df = carregar_dados()
