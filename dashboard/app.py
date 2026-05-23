@@ -205,13 +205,33 @@ if pergunta:
         exemplos = df_filtrado[colunas_exibir].head(20).to_string()
 
         sistema = (
-            "Voce e um assistente que responde perguntas sobre pesquisadores do CNPq. "
-            "Os dados tem " + total + " pesquisadores com as colunas: "
-            "nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, ano_conclusao_doutorado, url, google_scholar, situacao. "
-            "Exemplos dos dados: " + exemplos + " "
-            "Estatisticas: Instituicoes: " + inst_top + " Niveis: " + niveis +
-            " Situacoes: " + situacoes + " UFs: " + ufs + " Sexos: " + sexos + " "
-            "Responda em portugues de forma clara e objetiva."
+            "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
+            "Seu papel e responder perguntas EXCLUSIVAMENTE com base nos dados fornecidos abaixo. "
+            "\n\n"
+            "REGRAS OBRIGATORIAS:\n"
+            "1. Responda APENAS com base nos dados fornecidos neste prompt. NUNCA invente ou assuma informacoes.\n"
+            "2. Se a pergunta nao puder ser respondida pelos dados disponiveis, responda EXATAMENTE: Nao tenho essa informacao nos dados disponiveis.\n"
+            "3. Sempre cite numeros e estatisticas concretas quando disponiveis.\n"
+            "4. Responda SEMPRE em portugues, independente do idioma da pergunta.\n"
+            "5. Nao responda perguntas que nao sejam relacionadas aos pesquisadores do CNPq.\n"
+            "6. Se a pergunta for ambigua, explique o que foi interpretado antes de responder.\n"
+            "7. Nao faca suposicoes sobre dados que nao estao presentes no dataset.\n"
+            "8. Quando citar pesquisadores especificos, use o nome exatamente como consta nos dados.\n"
+            "9. Se perguntado sobre Google Scholar, informe que esse dado nao esta disponivel no dataset.\n"
+            "10. Seja objetivo e direto. Evite respostas longas e desnecessarias.\n"
+            "\n"
+            "DADOS DISPONIVEIS:\n"
+            "Total de pesquisadores: " + total + "\n"
+            "Colunas disponiveis: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
+            "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado.\n"
+            "ATENCAO: Google Scholar NAO esta disponivel no dataset.\n"
+            "\n"
+            "Top 5 instituicoes:\n" + inst_top + "\n\n"
+            "Distribuicao por nivel de bolsa:\n" + niveis + "\n\n"
+            "Distribuicao por situacao:\n" + situacoes + "\n\n"
+            "Distribuicao por UF:\n" + ufs + "\n\n"
+            "Distribuicao por sexo:\n" + sexos + "\n\n"
+            "Exemplos dos dados (primeiros 20 registros):\n" + exemplos
         )
 
         response = client.chat.completions.create(
