@@ -39,11 +39,31 @@ st.title("Dashboard - Pesquisadores CNPq")
 @st.cache_data(ttl=3600)
 def carregar_dados():
     url_csv = "https://raw.githubusercontent.com/elengreice/projeto-cnpq/main/data/dataset.csv"
-    df = pd.read_csv(url_csv)
-    return df
+    try:
+        df = pd.read_csv(url_csv)
+        return df, "online"
+    except Exception as e:
+        # Se nao conseguir acessar o GitHub, tenta carregar o arquivo local
+        try:
+            df = pd.read_csv("data/dataset.csv")
+            return df, "local"
+        except:
+            return None, "erro"
 
-df = carregar_dados()
-log_info("DASHBOARD INICIADO", f"Total de pesquisadores carregados: {len(df)}")
+resultado = carregar_dados()
+df, status_dados = resultado
+
+if status_dados == "online":
+    log_info("DASHBOARD INICIADO", f"Dados carregados do GitHub. Total: {len(df)} pesquisadores")
+
+elif status_dados == "local":
+    st.warning("⚠️ O site do CNPq ou GitHub esta temporariamente indisponivel. Exibindo dados da ultima atualizacao local.")
+    log_info("DASHBOARD INICIADO", f"Dados carregados localmente (GitHub indisponivel). Total: {len(df)} pesquisadores")
+
+elif status_dados == "erro":
+    st.error("❌ Nao foi possivel carregar os dados. Verifique sua conexao com a internet.")
+    log_erro("DASHBOARD INICIADO", "Falha ao carregar dados do GitHub e do arquivo local")
+    st.stop()
 
 # ── Validacoes do dataset ───────────────────────────────────────────
 alertas = []
