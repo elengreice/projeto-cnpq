@@ -45,6 +45,40 @@ def carregar_dados():
 df = carregar_dados()
 log_info("DASHBOARD INICIADO", f"Total de pesquisadores carregados: {len(df)}")
 
+# ── Validacoes do dataset ───────────────────────────────────────────
+alertas = []
+
+if len(df) == 0:
+    alertas.append("CRITICO: Dataset vazio!")
+if len(df) < 100:
+    alertas.append(f"ATENCAO: Apenas {len(df)} pesquisadores carregados. Esperado mais de 100.")
+
+colunas_obrigatorias = ["nome", "sexo", "instituicao", "uf", "nivel_bolsa", "situacao"]
+for col in colunas_obrigatorias:
+    if col not in df.columns:
+        alertas.append(f"CRITICO: Coluna '{col}' nao encontrada no dataset!")
+
+if "uf" in df.columns:
+    ufs_nulas = df["uf"].isna().sum()
+    if ufs_nulas > 0:
+        alertas.append(f"ATENCAO: {ufs_nulas} pesquisadores sem UF mapeada.")
+
+if "sexo" in df.columns:
+    sexo_indefinido = (df["sexo"] == "Indefinido").sum()
+    if sexo_indefinido > 0:
+        alertas.append(f"ATENCAO: {sexo_indefinido} pesquisadores com sexo indefinido.")
+
+if alertas:
+    for alerta in alertas:
+        if "CRITICO" in alerta:
+            st.error(alerta)
+            log_erro("VALIDACAO DO DATASET", alerta)
+        else:
+            st.warning(alerta)
+            log_info("VALIDACAO DO DATASET", alerta)
+else:
+    log_info("VALIDACAO DO DATASET", f"Dataset valido com {len(df)} pesquisadores")
+
 if st.button("Atualizar dados"):
     log_info("ATUALIZACAO DE DADOS", "Cache limpo e dados recarregados")
     st.cache_data.clear()
