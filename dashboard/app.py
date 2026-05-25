@@ -7,8 +7,29 @@ from bs4 import BeautifulSoup
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import logging
+from datetime import datetime
 
 load_dotenv()
+
+# ── Configuracao do Log ─────────────────────────────────────────────
+os.makedirs("logs", exist_ok=True)
+
+logging.basicConfig(
+    filename="logs/operacoes.log",
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    encoding="utf-8"
+)
+
+def log_info(operacao, detalhes=""):
+    mensagem = f"{operacao}" + (f" | {detalhes}" if detalhes else "")
+    logging.info(mensagem)
+
+def log_erro(operacao, erro=""):
+    mensagem = f"{operacao}" + (f" | ERRO: {erro}" if erro else "")
+    logging.error(mensagem)
 
 # ── Configuracao da pagina ──────────────────────────────────────────
 st.set_page_config(page_title="Pesquisadores CNPq", layout="wide")
@@ -22,8 +43,10 @@ def carregar_dados():
     return df
 
 df = carregar_dados()
+log_info("DASHBOARD INICIADO", f"Total de pesquisadores carregados: {len(df)}")
 
 if st.button("Atualizar dados"):
+    log_info("ATUALIZACAO DE DADOS", "Cache limpo e dados recarregados")
     st.cache_data.clear()
     st.rerun()
 
@@ -67,14 +90,19 @@ situacao = st.sidebar.multiselect(
 df_filtrado = df.copy()
 if nivel:
     df_filtrado = df_filtrado[df_filtrado["nivel_bolsa"].isin(nivel)]
+    log_info("FILTRO APLICADO", f"Nivel: {nivel}")
 if uf:
     df_filtrado = df_filtrado[df_filtrado["uf"].isin(uf)]
+    log_info("FILTRO APLICADO", f"UF: {uf}")
 if instituicao:
     df_filtrado = df_filtrado[df_filtrado["instituicao"].isin(instituicao)]
+    log_info("FILTRO APLICADO", f"Instituicao: {instituicao}")
 if sexo:
     df_filtrado = df_filtrado[df_filtrado["sexo"].isin(sexo)]
+    log_info("FILTRO APLICADO", f"Sexo: {sexo}")
 if situacao:
     df_filtrado = df_filtrado[df_filtrado["situacao"].isin(situacao)]
+    log_info("FILTRO APLICADO", f"Situacao: {situacao}")
 
 # ── Metricas principais ─────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
@@ -143,7 +171,7 @@ st.divider()
 # ── Tabela de dados ─────────────────────────────────────────────────
 st.subheader("Dados dos Pesquisadores")
 colunas_exibir = ["nome", "sexo", "instituicao", "uf", "nivel_bolsa",
-                  "area_atuacao", "ano_conclusao_doutorado", "url",
+                  "area_atuacao", "ano_conclusao_doutorado", "url_lattes",
                   "google_scholar", "situacao"]
 st.dataframe(df_filtrado[colunas_exibir], use_container_width=True)
 
@@ -156,12 +184,13 @@ col1, col2 = st.columns(2)
 
 with col1:
     csv = df_filtrado[colunas_exibir].to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-    st.download_button(
+    if st.download_button(
         label="Baixar CSV",
         data=csv,
         file_name="pesquisadores_cnpq.csv",
         mime="text/csv"
-    )
+    ):
+        log_info("EXPORTACAO CSV", f"Total de registros exportados: {len(df_filtrado)}")
 
 with col2:
     def gerar_pdf(df):
@@ -177,70 +206,74 @@ with col2:
         return bytes(pdf.output())
 
     pdf_bytes = gerar_pdf(df_filtrado)
-    st.download_button(
+    if st.download_button(
         label="Baixar PDF",
         data=pdf_bytes,
         file_name="pesquisadores_cnpq.pdf",
         mime="application/pdf"
-    )
+    ):
+        log_info("EXPORTACAO PDF", f"Total de registros exportados: {len(df_filtrado)}")
 
 # ── Interface de Linguagem Natural ──────────────────────────────────
 st.divider()
 st.subheader("Consulta em Linguagem Natural")
-st.caption("Faca perguntas sobre os dados em portugues. Ex: Quantos pesquisadores sao da Bahia?")
+st.caption("Faca perguntas sobre os dados em portugues. Ex: Quantos pesquisadores sao da USP?")
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 pergunta = st.text_input("Digite sua pergunta:")
 
 if pergunta:
+    log_info("CONSULTA LINGUAGEM NATURAL", f"Pergunta: {pergunta}")
     with st.spinner("Analisando..."):
+        try:
+            total = str(len(df_filtrado))
+            inst_top = df_filtrado["instituicao"].value_counts().head(5).to_string()
+            niveis = df_filtrado["nivel_bolsa"].value_counts().to_string()
+            situacoes = df_filtrado["situacao"].value_counts().to_string()
+            ufs = df_filtrado["uf"].value_counts().to_string()
+            sexos = df_filtrado["sexo"].value_counts().to_string()
+            exemplos = df_filtrado[colunas_exibir].head(20).to_string()
 
-        total = str(len(df_filtrado))
-        inst_top = df_filtrado["instituicao"].value_counts().head(5).to_string()
-        niveis = df_filtrado["nivel_bolsa"].value_counts().to_string()
-        situacoes = df_filtrado["situacao"].value_counts().to_string()
-        ufs = df_filtrado["uf"].value_counts().to_string()
-        sexos = df_filtrado["sexo"].value_counts().to_string()
-        exemplos = df_filtrado[colunas_exibir].head(20).to_string()
+            sistema = (
+                "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
+                "Seu papel e responder perguntas EXCLUSIVAMENTE com base nos dados fornecidos abaixo. "
+                "\n\nREGRAS OBRIGATORIAS:\n"
+                "1. Responda APENAS com base nos dados fornecidos neste prompt. NUNCA invente ou assuma informacoes.\n"
+                "2. Se a pergunta nao puder ser respondida pelos dados disponiveis, responda EXATAMENTE: Nao tenho essa informacao nos dados disponiveis.\n"
+                "3. Sempre cite numeros e estatisticas concretas quando disponiveis.\n"
+                "4. Responda SEMPRE em portugues, independente do idioma da pergunta.\n"
+                "5. Nao responda perguntas que nao sejam relacionadas aos pesquisadores do CNPq.\n"
+                "6. Se a pergunta for ambigua, explique o que foi interpretado antes de responder.\n"
+                "7. Nao faca suposicoes sobre dados que nao estao presentes no dataset.\n"
+                "8. Quando citar pesquisadores especificos, use o nome exatamente como consta nos dados.\n"
+                "9. Se perguntado sobre Google Scholar, informe que esse dado nao esta disponivel no dataset.\n"
+                "10. Seja objetivo e direto. Evite respostas longas e desnecessarias.\n"
+                "\nDADOS DISPONIVEIS:\n"
+                "Total de pesquisadores: " + total + "\n"
+                "Colunas disponiveis: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
+                "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado.\n"
+                "ATENCAO: Google Scholar NAO esta disponivel no dataset.\n\n"
+                "Top 5 instituicoes:\n" + inst_top + "\n\n"
+                "Distribuicao por nivel de bolsa:\n" + niveis + "\n\n"
+                "Distribuicao por situacao:\n" + situacoes + "\n\n"
+                "Distribuicao por UF:\n" + ufs + "\n\n"
+                "Distribuicao por sexo:\n" + sexos + "\n\n"
+                "Exemplos dos dados (primeiros 20 registros):\n" + exemplos
+            )
 
-        sistema = (
-            "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
-            "Seu papel e responder perguntas EXCLUSIVAMENTE com base nos dados fornecidos abaixo. "
-            "\n\n"
-            "REGRAS OBRIGATORIAS:\n"
-            "1. Responda APENAS com base nos dados fornecidos neste prompt. NUNCA invente ou assuma informacoes.\n"
-            "2. Se a pergunta nao puder ser respondida pelos dados disponiveis, responda EXATAMENTE: Nao tenho essa informacao nos dados disponiveis.\n"
-            "3. Sempre cite numeros e estatisticas concretas quando disponiveis.\n"
-            "4. Responda SEMPRE em portugues, independente do idioma da pergunta.\n"
-            "5. Nao responda perguntas que nao sejam relacionadas aos pesquisadores do CNPq.\n"
-            "6. Se a pergunta for ambigua, explique o que foi interpretado antes de responder.\n"
-            "7. Nao faca suposicoes sobre dados que nao estao presentes no dataset.\n"
-            "8. Quando citar pesquisadores especificos, use o nome exatamente como consta nos dados.\n"
-            "9. Se perguntado sobre Google Scholar, informe que esse dado nao esta disponivel no dataset.\n"
-            "10. Seja objetivo e direto. Evite respostas longas e desnecessarias.\n"
-            "\n"
-            "DADOS DISPONIVEIS:\n"
-            "Total de pesquisadores: " + total + "\n"
-            "Colunas disponiveis: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
-            "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado.\n"
-            "ATENCAO: Google Scholar NAO esta disponivel no dataset.\n"
-            "\n"
-            "Top 5 instituicoes:\n" + inst_top + "\n\n"
-            "Distribuicao por nivel de bolsa:\n" + niveis + "\n\n"
-            "Distribuicao por situacao:\n" + situacoes + "\n\n"
-            "Distribuicao por UF:\n" + ufs + "\n\n"
-            "Distribuicao por sexo:\n" + sexos + "\n\n"
-            "Exemplos dos dados (primeiros 20 registros):\n" + exemplos
-        )
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[
+                    {"role": "system", "content": sistema},
+                    {"role": "user", "content": pergunta}
+                ]
+            )
 
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": sistema},
-                {"role": "user", "content": pergunta}
-            ]
-        )
+            resposta = response.choices[0].message.content
+            st.write("**Resposta:** " + resposta)
+            log_info("RESPOSTA GERADA", "Pergunta respondida com sucesso")
 
-        resposta = response.choices[0].message.content
-        st.write("**Resposta:** " + resposta)
+        except Exception as e:
+            log_erro("ERRO NA CONSULTA", str(e))
+            st.error("Ocorreu um erro ao processar sua pergunta. Tente novamente.")
