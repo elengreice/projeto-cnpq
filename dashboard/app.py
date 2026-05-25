@@ -227,13 +227,14 @@ if pergunta:
     log_info("CONSULTA LINGUAGEM NATURAL", f"Pergunta: {pergunta}")
     with st.spinner("Analisando..."):
         try:
-            total = str(len(df_filtrado))
-            inst_top = df_filtrado["instituicao"].value_counts().head(5).to_string()
-            niveis = df_filtrado["nivel_bolsa"].value_counts().to_string()
-            situacoes = df_filtrado["situacao"].value_counts().to_string()
-            ufs = df_filtrado["uf"].value_counts().to_string()
-            sexos = df_filtrado["sexo"].value_counts().to_string()
-            exemplos = df_filtrado[colunas_exibir].head(20).to_string()
+            total       = str(len(df_filtrado))
+            inst_top    = df_filtrado["instituicao"].value_counts().head(5).to_string()
+            niveis      = df_filtrado["nivel_bolsa"].value_counts().to_string()
+            situacoes   = df_filtrado["situacao"].value_counts().to_string()
+            ufs         = df_filtrado["uf"].value_counts().to_string()
+            sexos       = df_filtrado["sexo"].value_counts().to_string()
+            sexo_por_uf = df_filtrado.groupby(["uf","sexo"]).size().reset_index(name="total").to_string()
+            exemplos    = df_filtrado[colunas_exibir].head(20).to_string()
 
             sistema = (
                 "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
@@ -259,6 +260,7 @@ if pergunta:
                 "Distribuicao por situacao:\n" + situacoes + "\n\n"
                 "Distribuicao por UF:\n" + ufs + "\n\n"
                 "Distribuicao por sexo:\n" + sexos + "\n\n"
+                "Distribuicao de sexo por UF:\n" + sexo_por_uf + "\n\n"
                 "Exemplos dos dados (primeiros 20 registros):\n" + exemplos
             )
 
@@ -277,3 +279,18 @@ if pergunta:
         except Exception as e:
             log_erro("ERRO NA CONSULTA", str(e))
             st.error("Ocorreu um erro ao processar sua pergunta. Tente novamente.")
+
+# ── Visualizacao do Log ─────────────────────────────────────────────
+st.divider()
+st.subheader("Log de Operacoes")
+
+if st.button("Ver Log"):
+    try:
+        with open("logs/operacoes.log", "r", encoding="utf-8") as f:
+            conteudo = f.read()
+        if conteudo:
+            st.code(conteudo)
+        else:
+            st.info("Log vazio.")
+    except:
+        st.warning("Arquivo de log nao encontrado.")
