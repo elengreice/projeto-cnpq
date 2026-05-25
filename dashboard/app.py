@@ -241,8 +241,24 @@ if pergunta:
                 sexo_uf["Feminino"] = 0
             if "Masculino" not in sexo_uf.columns:
                 sexo_uf["Masculino"] = 0
-            sexo_uf["total"] = sexo_uf["Feminino"] + sexo_uf["Masculino"]
-            sexo_por_uf = sexo_uf[["Feminino","Masculino","total"]].to_string()
+            sexo_uf["Total"] = sexo_uf["Feminino"] + sexo_uf["Masculino"]
+            sexo_uf = sexo_uf.sort_values("Feminino", ascending=False)
+
+            uf_mais_feminino = sexo_uf.index[0]
+            qtd_mais_feminino = int(sexo_uf["Feminino"].iloc[0])
+            uf_mais_masculino = sexo_uf.sort_values("Masculino", ascending=False).index[0]
+            qtd_mais_masculino = int(sexo_uf.sort_values("Masculino", ascending=False)["Masculino"].iloc[0])
+            ufs_sem_feminino = sexo_uf[sexo_uf["Feminino"] == 0].index.tolist()
+
+            sexo_por_uf = (
+                "Tabela completa (UF | Feminino | Masculino | Total):\n" +
+                sexo_uf[["Feminino","Masculino","Total"]].to_string() +
+                f"\n\nRESUMO PRE-CALCULADO (use estes valores nas respostas):\n"
+                f"- UF com MAIS pesquisadoras femininas: {uf_mais_feminino} com {qtd_mais_feminino} mulheres\n"
+                f"- UF com MAIS pesquisadores masculinos: {uf_mais_masculino} com {qtd_mais_masculino} homens\n"
+                f"- UFs SEM pesquisadoras femininas: {ufs_sem_feminino}\n"
+                f"- Top 3 UFs com mais mulheres: {sexo_uf['Feminino'].head(3).to_dict()}\n"
+            )
 
             sistema = (
                 "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
