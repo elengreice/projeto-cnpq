@@ -35,34 +35,76 @@ def log_erro(operacao, erro=""):
 st.set_page_config(page_title="Pesquisadores CNPq", layout="wide")
 st.title("Dashboard - Pesquisadores CNPq")
 
-# ── Carrega os dados do CSV no GitHub ───────────────────────────────
+# ── Carrega os dados ─────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
 def carregar_dados():
-    url_csv = "https://raw.githubusercontent.com/elengreice/projeto-cnpq/main/data/dataset.csv"
+    URL_CNPQ = (
+        "http://plsql1.cnpq.br/divulg/RESULTADO_PQ_102003.prc_comp_cmt_links"
+        "?V_COD_DEMANDA=200310&V_TPO_RESULT=CURSO"
+        "&V_COD_AREA_CONHEC=10300007&V_COD_CMT_ASSESSOR=CC"
+    )
+    HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    URL_GITHUB = "https://raw.githubusercontent.com/elengreice/projeto-cnpq/main/data/dataset.csv"
+
+    # Tentativa 1: buscar direto do site do CNPq
     try:
-        df = pd.read_csv(url_csv)
-        return df, "online"
-    except Exception as e:
-        # Se nao conseguir acessar o GitHub, tenta carregar o arquivo local
-        try:
-            df = pd.read_csv("data/dataset.csv")
-            return df, "local"
-        except:
-            return None, "erro"
+        response = requests.get(URL_CNPQ, headers=HEADERS, timeout=15)
+        response.encoding = "latin-1"
+        soup = BeautifulSoup(response.text, "html.parser")
+        tabelas = soup.find_all("table")
+        pesquisadores = []
+        for tabela in tabelas:
+            linhas = tabela.find_all("tr")
+            for linha in linhas:
+                colunas = linha.find_all("td")
+                if len(colunas) >= 6:
+                    nome = colunas[0].text.strip()
+                    nivel = colunas[1].text.strip()
+                    if nome and nivel and nome.upper() != "NOME":
+                        pesquisadores.append({
+                            "nome": nome,
+                            "nivel_bolsa": nivel,
+                            "vigencia_inicio": colunas[2].text.strip(),
+                            "vigencia_termino": colunas[3].text.strip(),
+                            "instituicao": colunas[4].text.strip(),
+                            "situacao": colunas[5].text.strip(),
+                        })
+        if len(pesquisadores) > 10:
+            df = pd.DataFrame(pesquisadores).drop_duplicates(subset=["nome"])
+            return df, "cnpq"
+    except:
+        pass
 
-resultado = carregar_dados()
-df, status_dados = resultado
+    # Tentativa 2: buscar do dataset no GitHub
+    try:
+        df = pd.read_csv(URL_GITHUB)
+        return df, "github"
+    except:
+        pass
 
-if status_dados == "online":
-    log_info("DASHBOARD INICIADO", f"Dados carregados do GitHub. Total: {len(df)} pesquisadores")
+    # Tentativa 3: buscar do arquivo local
+    try:
+        df = pd.read_csv("data/dataset.csv")
+        return df, "local"
+    except:
+        return None, "erro"
+
+df, status_dados = carregar_dados()
+
+if status_dados == "cnpq":
+    log_info("DASHBOARD INICIADO", f"Dados carregados direto do CNPq. Total: {len(df)} pesquisadores")
+
+elif status_dados == "github":
+    st.warning("⚠️ Site do CNPq indisponivel. Exibindo dados da ultima atualizacao.")
+    log_info("DASHBOARD INICIADO", f"Dados carregados do GitHub (CNPq indisponivel). Total: {len(df)} pesquisadores")
 
 elif status_dados == "local":
-    st.warning("⚠️ O site do CNPq ou GitHub esta temporariamente indisponivel. Exibindo dados da ultima atualizacao local.")
-    log_info("DASHBOARD INICIADO", f"Dados carregados localmente (GitHub indisponivel). Total: {len(df)} pesquisadores")
+    st.warning("⚠️ CNPq e GitHub indisponiveis. Exibindo dados do arquivo local.")
+    log_info("DASHBOARD INICIADO", f"Dados carregados localmente. Total: {len(df)} pesquisadores")
 
 elif status_dados == "erro":
-    st.error("❌ Nao foi possivel carregar os dados. Verifique sua conexao com a internet.")
-    log_erro("DASHBOARD INICIADO", "Falha ao carregar dados do GitHub e do arquivo local")
+    st.error("❌ Nao foi possivel carregar os dados. Verifique sua conexao.")
+    log_erro("DASHBOARD INICIADO", "Falha total ao carregar dados")
     st.stop()
 
 # ── Validacoes do dataset ───────────────────────────────────────────
