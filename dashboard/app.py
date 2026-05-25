@@ -233,8 +233,8 @@ if pergunta:
             situacoes   = df_filtrado["situacao"].value_counts().to_string()
             ufs         = df_filtrado["uf"].value_counts().to_string()
             sexos       = df_filtrado["sexo"].value_counts().to_string()
-            sexo_por_uf = df_filtrado.groupby(["uf","sexo"]).size().reset_index(name="total").to_string()
-            exemplos    = df_filtrado[colunas_exibir].head(20).to_string()
+            sexo_por_uf = df_filtrado.groupby(["uf","sexo"]).size().reset_index(name="total").head(20).to_string()
+            exemplos = df_filtrado[["nome", "sexo", "uf", "instituicao", "nivel_bolsa"]].head(10).to_string()
 
             sistema = (
                 "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
