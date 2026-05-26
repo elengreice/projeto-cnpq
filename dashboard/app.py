@@ -2,13 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from fpdf import FPDF
-import requests
-from bs4 import BeautifulSoup
 from groq import Groq
 from dotenv import load_dotenv
 import os
 import logging
-from datetime import datetime
+import sys
+
+sys.path.append(".")
+from tools.data_loader import carregar_dados
 
 load_dotenv()
 
@@ -38,68 +39,20 @@ st.title("Dashboard - Pesquisadores CNPq")
 # ── Carrega os dados ─────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
 def carregar_dados():
-    URL_GITHUB = "https://raw.githubusercontent.com/elengreice/projeto-cnpq/main/data/dataset.csv"
-    URL_CNPQ = (
-        "http://plsql1.cnpq.br/divulg/RESULTADO_PQ_102003.prc_comp_cmt_links"
-        "?V_COD_DEMANDA=200310&V_TPO_RESULT=CURSO"
-        "&V_COD_AREA_CONHEC=10300007&V_COD_CMT_ASSESSOR=CC"
-    )
-    HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    return _carregar_dados()
 
-    # Carrega o dataset completo do GitHub (com todos os campos)
-    try:
-        df_completo = pd.read_csv(URL_GITHUB)
-    except:
-        try:
-            df_completo = pd.read_csv("data/dataset.csv")
-        except:
-            return None, "erro"
-
-    # Verifica se o CNPq esta disponivel e se ha novos pesquisadores
-    try:
-        response = requests.get(URL_CNPQ, headers=HEADERS, timeout=15)
-        response.encoding = "latin-1"
-        soup = BeautifulSoup(response.text, "html.parser")
-        tabelas = soup.find_all("table")
-        nomes_cnpq = []
-        for tabela in tabelas:
-            linhas = tabela.find_all("tr")
-            for linha in linhas:
-                colunas = linha.find_all("td")
-                if len(colunas) >= 6:
-                    nome = colunas[0].text.strip()
-                    nivel = colunas[1].text.strip()
-                    if nome and nivel and nome.upper() != "NOME":
-                        nomes_cnpq.append(nome)
-
-        if len(nomes_cnpq) > 10:
-            novos = set(nomes_cnpq) - set(df_completo["nome"].tolist())
-            removidos = set(df_completo["nome"].tolist()) - set(nomes_cnpq)
-
-            if novos or removidos:
-                return df_completo, "cnpq_atualizado", len(novos), len(removidos)
-            return df_completo, "cnpq_ok"
-    except:
-        return df_completo, "github"
-
-resultado = carregar_dados()
-
-if len(resultado) == 2:
-    df, status_dados = resultado
-    novos, removidos = 0, 0
-else:
-    df, status_dados, novos, removidos = resultado
+df, status_dados, novos, removidos = carregar_dados()
 
 if status_dados == "cnpq_ok":
     log_info("DASHBOARD INICIADO", f"CNPq disponivel. Dataset atualizado. Total: {len(df)} pesquisadores")
 
 elif status_dados == "cnpq_atualizado":
-    st.info(f"ℹ️ O site do CNPq foi verificado. Ha {novos} novos pesquisadores e {removidos} removidos desde a ultima atualizacao. Execute o scraper para atualizar o dataset.")
-    log_info("DASHBOARD INICIADO", f"CNPq disponivel com mudancas. Novos: {novos}, Removidos: {removidos}")
+    st.info(f"ℹ️ Ha {novos} novos pesquisadores e {removidos} removidos desde a ultima atualizacao.")
+    log_info("DASHBOARD INICIADO", f"CNPq com mudancas. Novos: {novos}, Removidos: {removidos}")
 
 elif status_dados == "github":
     st.warning("⚠️ Site do CNPq indisponivel. Exibindo dados da ultima atualizacao.")
-    log_info("DASHBOARD INICIADO", f"CNPq indisponivel. Dados carregados do GitHub. Total: {len(df)} pesquisadores")
+    log_info("DASHBOARD INICIADO", f"CNPq indisponivel. Dados do GitHub. Total: {len(df)} pesquisadores")
 
 elif status_dados == "erro":
     st.error("❌ Nao foi possivel carregar os dados. Verifique sua conexao.")
