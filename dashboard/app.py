@@ -8,8 +8,8 @@ import os
 import logging
 import sys
 
-sys.path.append(".")
-from tools.data_loader import carregar_dados
+sys.path.insert(0, ".")
+from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
 load_dotenv()
 
@@ -39,7 +39,7 @@ st.title("Dashboard - Pesquisadores CNPq")
 # ── Carrega os dados ─────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
 def carregar_dados():
-    return _carregar_dados()
+    return carregar_dados_cnpq()
 
 df, status_dados, novos, removidos = carregar_dados()
 
