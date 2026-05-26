@@ -43,6 +43,10 @@ def carregar_dados():
 
 df, status_dados, novos, removidos = carregar_dados()
 
+# Filtra apenas pesquisadores ativos para o dashboard
+df = df[df["ativo"] == "S"].copy()
+
+# Gravando Log
 if status_dados == "cnpq_ok":
     log_info("DASHBOARD INICIADO", f"CNPq disponivel. Dataset atualizado. Total: {len(df)} pesquisadores")
 
