@@ -266,6 +266,9 @@ with col2:
     ):
         log_info("EXPORTACAO PDF", f"Total de registros exportados: {len(df_filtrado)}")
 
+print(f"Tamanho do contexto: {len(sistema)} caracteres")
+print(f"Tokens aproximados: {len(sistema)//4}")
+
 # ── Interface de Linguagem Natural ──────────────────────────────────
 st.divider()
 st.subheader("Consulta em Linguagem Natural")
