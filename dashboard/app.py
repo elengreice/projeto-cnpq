@@ -287,6 +287,14 @@ if pergunta:
             sexos       = df_filtrado["sexo"].value_counts().to_string()
             exemplos = df_filtrado[["nome", "sexo", "uf", "instituicao", "nivel_bolsa"]].head(10).to_string()
 
+            # ── Estatisticas pre-calculadas para o Query Agent ──────────────────
+            total = str(len(df_filtrado))
+            inst_top = df_filtrado["instituicao"].value_counts().head(5).to_string()
+            niveis = df_filtrado["nivel_bolsa"].value_counts().to_string()
+            situacoes = df_filtrado["situacao"].value_counts().to_string()
+            exemplos = df_filtrado[["nome", "sexo", "uf", "instituicao", "nivel_bolsa"]].head(10).to_string()
+
+            # Sexo por UF
             sexo_uf = df_filtrado.groupby(["uf","sexo"]).size().unstack(fill_value=0)
             sexo_uf.columns = [str(c) for c in sexo_uf.columns]
             if "Feminino" not in sexo_uf.columns:
@@ -295,27 +303,90 @@ if pergunta:
                 sexo_uf["Masculino"] = 0
             sexo_uf["Total"] = sexo_uf["Feminino"] + sexo_uf["Masculino"]
             sexo_uf = sexo_uf.sort_values("Feminino", ascending=False)
-
             uf_mais_feminino = sexo_uf.index[0]
             qtd_mais_feminino = int(sexo_uf["Feminino"].iloc[0])
             uf_mais_masculino = sexo_uf.sort_values("Masculino", ascending=False).index[0]
             qtd_mais_masculino = int(sexo_uf.sort_values("Masculino", ascending=False)["Masculino"].iloc[0])
             ufs_sem_feminino = sexo_uf[sexo_uf["Feminino"] == 0].index.tolist()
-
             sexo_por_uf = (
                 "Tabela completa (UF | Feminino | Masculino | Total):\n" +
                 sexo_uf[["Feminino","Masculino","Total"]].to_string() +
-                f"\n\nRESUMO PRE-CALCULADO (use estes valores nas respostas):\n"
+                f"\n\nRESUMO PRE-CALCULADO:\n"
                 f"- UF com MAIS pesquisadoras femininas: {uf_mais_feminino} com {qtd_mais_feminino} mulheres\n"
                 f"- UF com MAIS pesquisadores masculinos: {uf_mais_masculino} com {qtd_mais_masculino} homens\n"
                 f"- UFs SEM pesquisadoras femininas: {ufs_sem_feminino}\n"
                 f"- Top 3 UFs com mais mulheres: {sexo_uf['Feminino'].head(3).to_dict()}\n"
             )
 
+            # UF rankings
+            uf_counts = df_filtrado["uf"].value_counts()
+            ufs = uf_counts.to_string()
+            uf_mais_pesquisadores = uf_counts.index[0]
+            qtd_uf_mais = int(uf_counts.iloc[0])
+            uf_menos_pesquisadores = uf_counts.index[-1]
+            qtd_uf_menos = int(uf_counts.iloc[-1])
+            resumo_ufs = (
+                f"Distribuicao por UF (maior para menor):\n{ufs}\n\n"
+                f"RESUMO PRE-CALCULADO:\n"
+                f"- UF com MAIS pesquisadores: {uf_mais_pesquisadores} com {qtd_uf_mais}\n"
+                f"- UF com MENOS pesquisadores: {uf_menos_pesquisadores} com {qtd_uf_menos}\n"
+                f"- Top 3 com mais: {uf_counts.head(3).to_dict()}\n"
+                f"- Top 3 com menos: {uf_counts.tail(3).to_dict()}\n"
+            )
+
+            # Situacao por UF
+            sit_uf = df_filtrado.groupby(["uf","situacao"]).size().reset_index(name="total")
+            sit_uf_resumo = sit_uf.sort_values("total", ascending=False)
+            ufs_por_situacao = {}
+            for sit in df_filtrado["situacao"].unique():
+                ufs = sit_uf[sit_uf["situacao"] == sit].sort_values("total", ascending=False)
+                if len(ufs) > 0:
+                    ufs_por_situacao[sit] = ufs[["uf","total"]].head(5).to_string()
+            situacao_por_uf_str = (
+                "Distribuicao de situacao por UF:\n" +
+                sit_uf_resumo.to_string() +
+                "\n\nRESUMO PRE-CALCULADO por situacao:\n" +
+                "\n".join([f"- {sit}:\n{dados}" for sit, dados in ufs_por_situacao.items()])
+            )
+
+            # Nivel por UF
+            nivel_uf = df_filtrado.groupby(["uf","nivel_bolsa"]).size().reset_index(name="total")
+            nivel_uf_resumo = nivel_uf.sort_values("total", ascending=False)
+            nivel_por_uf_str = (
+                "Distribuicao de nivel por UF:\n" +
+                nivel_uf_resumo.to_string()
+            )
+
+            # Sexo por nivel
+            sexo_nivel = df_filtrado.groupby(["nivel_bolsa","sexo"]).size().unstack(fill_value=0)
+            sexo_nivel.columns = [str(c) for c in sexo_nivel.columns]
+            if "Feminino" not in sexo_nivel.columns:
+                sexo_nivel["Feminino"] = 0
+            if "Masculino" not in sexo_nivel.columns:
+                sexo_nivel["Masculino"] = 0
+            sexo_nivel["Total"] = sexo_nivel["Feminino"] + sexo_nivel["Masculino"]
+            sexo_por_nivel_str = (
+                "Distribuicao de sexo por nivel de bolsa:\n" +
+                sexo_nivel[["Feminino","Masculino","Total"]].to_string()
+            )
+
+            # Instituicao rankings
+            inst_counts = df_filtrado["instituicao"].value_counts()
+            inst_mais = inst_counts.index[0]
+            qtd_inst_mais = int(inst_counts.iloc[0])
+            inst_menos = inst_counts.index[-1]
+            qtd_inst_menos = int(inst_counts.iloc[-1])
+            resumo_inst = (
+                f"Top 10 instituicoes:\n{inst_counts.head(10).to_string()}\n\n"
+                f"RESUMO PRE-CALCULADO:\n"
+                f"- Instituicao com MAIS pesquisadores: {inst_mais} com {qtd_inst_mais}\n"
+                f"- Instituicao com MENOS pesquisadores: {inst_menos} com {qtd_inst_menos}\n"
+            )
+
             sistema = (
                 "Voce e um assistente especializado em analise de dados de pesquisadores bolsistas do CNPq. "
                 "Seu papel e responder perguntas EXCLUSIVAMENTE com base nos dados fornecidos abaixo. "
-                "REGRAS OBRIGATORIAS:\n"
+                "\n\nREGRAS OBRIGATORIAS:\n"
                 "1. Responda APENAS com base nos dados fornecidos neste prompt. NUNCA invente ou assuma informacoes.\n"
                 "2. Se a pergunta nao puder ser respondida pelos dados disponiveis, responda EXATAMENTE: Nao tenho essa informacao nos dados disponiveis.\n"
                 "3. Sempre cite numeros EXATOS dos dados fornecidos. NUNCA arredonde ou estime.\n"
@@ -326,22 +397,24 @@ if pergunta:
                 "8. Quando citar pesquisadores especificos, use o nome exatamente como consta nos dados.\n"
                 "9. Se perguntado sobre Google Scholar, informe que esse dado nao esta disponivel no dataset.\n"
                 "10. Seja DIRETO e CONCISO. Responda em no maximo 5 linhas.\n"
-                "11. Para perguntas sobre rankings (maior, menor, mais, menos), cite apenas o top 3 com numeros exatos.\n"
-                "12. NUNCA use linguagem de incerteza como 'pode ser', 'talvez', 'provavelmente', 'parece que'.\n"
-                "13. Se os dados mostrarem um numero exato, cite esse numero. Ex: SP tem 18 pesquisadoras.\n"
-                "14. Para perguntas sobre sexo por UF, use APENAS os numeros da tabela Distribuicao de sexo por UF.\n"
+                "11. Para perguntas sobre rankings, cite apenas o top 3 com numeros exatos.\n"
+                "12. NUNCA use linguagem de incerteza como 'pode ser', 'talvez', 'provavelmente'.\n"
+                "13. Se os dados mostrarem um numero exato, cite esse numero.\n"
+                "14. Para cruzamentos de dados, use APENAS as tabelas pre-calculadas fornecidas.\n"
                 "\nDADOS DISPONIVEIS:\n"
                 "Total de pesquisadores: " + total + "\n"
-                "Colunas disponiveis: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
-                "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado.\n"
-                "ATENCAO: Google Scholar NAO esta disponivel no dataset.\n\n"
-                "Top 5 instituicoes:\n" + inst_top + "\n\n"
-                "Distribuicao por nivel de bolsa:\n" + niveis + "\n\n"
-                "Distribuicao por situacao:\n" + situacoes + "\n\n"
-                "Distribuicao por UF:\n" + ufs + "\n\n"
-                "Distribuicao por sexo:\n" + sexos + "\n\n"
-                "Distribuicao de sexo por UF:\n" + sexo_por_uf + "\n\n"
-                "Exemplos dos dados (primeiros 20 registros):\n" + exemplos
+                "Colunas: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, ano_conclusao_doutorado, url_lattes, situacao.\n"
+                "ATENCAO: Google Scholar NAO esta disponivel.\n\n"
+                "Top 5 instituicoes:\n" + inst_top + "\n\n" +
+                resumo_inst + "\n\n" +
+                "Distribuicao por nivel:\n" + niveis + "\n\n" +
+                "Distribuicao por situacao:\n" + situacoes + "\n\n" +
+                resumo_ufs + "\n\n" +
+                sexo_por_uf + "\n\n" +
+                situacao_por_uf_str + "\n\n" +
+                nivel_por_uf_str + "\n\n" +
+                sexo_por_nivel_str + "\n\n" +
+                "Exemplos dos dados:\n" + exemplos
             )
 
             response = client.chat.completions.create(
