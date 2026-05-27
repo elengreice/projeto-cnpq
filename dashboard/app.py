@@ -349,12 +349,25 @@ if pergunta:
                 "\n".join([f"- {sit}:\n{dados}" for sit, dados in ufs_por_situacao.items()])
             )
 
-            # Nivel por UF
+            # Nivel por UF com resumo
             nivel_uf = df_filtrado.groupby(["uf","nivel_bolsa"]).size().reset_index(name="total")
             nivel_uf_resumo = nivel_uf.sort_values("total", ascending=False)
+
+            # Para cada nivel, qual UF tem mais
+            niveis_unicos = df_filtrado["nivel_bolsa"].unique()
+            resumo_nivel_uf = {}
+            for nivel in niveis_unicos:
+                dados = nivel_uf[nivel_uf["nivel_bolsa"] == nivel].sort_values("total", ascending=False)
+                if len(dados) > 0:
+                    uf_top = dados.iloc[0]["uf"]
+                    qtd_top = int(dados.iloc[0]["total"])
+                    resumo_nivel_uf[nivel] = f"{uf_top} com {qtd_top} pesquisadores"
+
             nivel_por_uf_str = (
                 "Distribuicao de nivel por UF:\n" +
-                nivel_uf_resumo.to_string()
+                nivel_uf_resumo.to_string() +
+                "\n\nRESUMO PRE-CALCULADO (UF com mais pesquisadores por nivel):\n" +
+                "\n".join([f"- Nivel {n}: {r}" for n, r in resumo_nivel_uf.items()])
             )
 
             # Sexo por nivel
