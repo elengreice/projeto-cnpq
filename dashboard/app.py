@@ -414,6 +414,7 @@ if pergunta:
                 "12. NUNCA use linguagem de incerteza como 'pode ser', 'talvez', 'provavelmente'.\n"
                 "13. Se os dados mostrarem um numero exato, cite esse numero.\n"
                 "14. Para cruzamentos de dados, use APENAS as tabelas pre-calculadas fornecidas.\n"
+                "15. Os niveis de bolsa no dataset usam o prefixo PQ-. Exemplos: PQ-1A, PQ-1B, PQ-1C, PQ-1D, PQ-2, PQ-A, PQ-B, PQ-C, PQ-SR. Quando o usuario perguntar sobre nivel '1A', interprete como 'PQ-1A'.\n"
                 "\nDADOS DISPONIVEIS:\n"
                 "Total de pesquisadores: " + total + "\n"
                 "Colunas: nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, ano_conclusao_doutorado, url_lattes, situacao.\n"
