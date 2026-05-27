@@ -266,9 +266,6 @@ with col2:
     ):
         log_info("EXPORTACAO PDF", f"Total de registros exportados: {len(df_filtrado)}")
 
-print(f"Tamanho do contexto: {len(sistema)} caracteres")
-print(f"Tokens aproximados: {len(sistema)//4}")
-
 # ── Interface de Linguagem Natural ──────────────────────────────────
 st.divider()
 st.subheader("Consulta em Linguagem Natural")
@@ -432,6 +429,9 @@ if pergunta:
                 sexo_por_nivel_str + "\n\n" +
                 "Exemplos dos dados:\n" + exemplos
             )
+
+            print(f"Tamanho do contexto: {len(sistema)} caracteres")
+            print(f"Tokens aproximados: {len(sistema)//4}")
 
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
