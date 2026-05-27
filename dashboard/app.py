@@ -349,15 +349,20 @@ if pergunta:
                 "\n".join([f"- {sit}:\n{dados}" for sit, dados in ufs_por_situacao.items()])
             )
 
-            # Nivel por UF com resumo direto
+            # Nivel por UF com resumo direto e UFs sem cada nivel
             nivel_uf = df_filtrado.groupby(["uf","nivel_bolsa"]).size().reset_index(name="total")
+            todas_ufs = set(df_filtrado["uf"].unique())
 
             resumo_nivel_uf_linhas = []
             for nivel in sorted(df_filtrado["nivel_bolsa"].unique()):
                 dados = nivel_uf[nivel_uf["nivel_bolsa"] == nivel].sort_values("total", ascending=False)
+                ufs_com_nivel = set(dados["uf"].tolist())
+                ufs_sem_nivel = sorted(todas_ufs - ufs_com_nivel)
                 if len(dados) > 0:
                     top3 = ", ".join([f"{row['uf']}({int(row['total'])})" for _, row in dados.head(3).iterrows()])
-                    resumo_nivel_uf_linhas.append(f"- {nivel}: top 3 UFs = {top3}")
+                    resumo_nivel_uf_linhas.append(
+                        f"- {nivel}: top 3 UFs = {top3} | UFs SEM esse nivel = {ufs_sem_nivel if ufs_sem_nivel else 'nenhuma'}"
+                    )
 
             nivel_por_uf_str = (
                 "RANKING DE UFs POR NIVEL DE BOLSA (formato: UF(quantidade)):\n" +
