@@ -286,17 +286,22 @@ if pergunta:
                 temperature=0
             )
 
+            # Envia apenas colunas essenciais para reduzir tokens
+            df_query = df_filtrado[["nome", "sexo", "instituicao", "uf", 
+                                    "nivel_bolsa", "situacao", 
+                                    "ano_conclusao_doutorado"]].copy()
+
             agent = create_pandas_dataframe_agent(
                 llm,
-                df_filtrado,
+                df_query,
                 verbose=False,
                 allow_dangerous_code=True,
+                max_iterations=5,
                 agent_executor_kwargs={"handle_parsing_errors": True},
                 prefix=(
                     "Voce e um assistente que responde perguntas sobre pesquisadores do CNPq. "
                     "Voce tem acesso a um DataFrame pandas chamado 'df' com as colunas: "
-                    "nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
-                    "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado. "
+                    "nome, sexo, instituicao, uf, nivel_bolsa, situacao, ano_conclusao_doutorado. "
                     "REGRAS OBRIGATORIAS:\n"
                     "1. Responda SEMPRE em portugues.\n"
                     "2. Use o DataFrame para calcular respostas precisas.\n"
@@ -305,8 +310,8 @@ if pergunta:
                     "5. Seja direto e conciso.\n"
                     "6. Niveis de bolsa usam prefixo PQ-: PQ-1A, PQ-1B, PQ-1C, PQ-1D, PQ-2, PQ-A, PQ-B, PQ-C, PQ-SR.\n"
                     "7. Google Scholar nao esta disponivel no dataset.\n"
-                    "8. O campo 'uf' contem a sigla do estado (ex: SP, RJ, MG, BA).\n"
-                    "9. O campo 'sexo' contem Masculino ou Feminino.\n"
+                    "8. O campo uf contem a sigla do estado (ex: SP, RJ, MG, BA).\n"
+                    "9. O campo sexo contem Masculino ou Feminino.\n"
                     "10. Nunca invente dados que nao existam no DataFrame.\n"
                 )
             )
