@@ -291,7 +291,7 @@ if pergunta:
                 llm,
                 df_filtrado,
                 verbose=False,
-                agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+                agent_type="zero-shot-react-description",
                 allow_dangerous_code=True,
                 prefix=(
                     "Voce e um assistente que responde perguntas sobre pesquisadores do CNPq. "
