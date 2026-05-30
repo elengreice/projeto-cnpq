@@ -277,21 +277,12 @@ if pergunta:
     log_info("CONSULTA LINGUAGEM NATURAL", f"Pergunta: {pergunta}")
     with st.spinner("Analisando..."):
         try:
-            from langchain_groq import ChatGroq
+            from langchain_openai import ChatOpenAI
             from langchain_experimental.agents import create_pandas_dataframe_agent
 
-            llm = ChatGroq(
-                model="llama-3.1-8b-instant",
-                api_key=os.getenv("GROQ_API_KEY"),
-                temperature=0
-            )
-
-            from langchain_groq import ChatGroq
-            from langchain_experimental.agents import create_pandas_dataframe_agent
-
-            llm = ChatGroq(
-                model="llama-3.1-8b-instant",
-                api_key=os.getenv("GROQ_API_KEY"),
+            llm = ChatOpenAI(
+                model="gpt-4o",
+                api_key=os.getenv("OPENAI_API_KEY"),
                 temperature=0
             )
 
@@ -305,15 +296,18 @@ if pergunta:
                     "Voce e um assistente que responde perguntas sobre pesquisadores do CNPq. "
                     "Voce tem acesso a um DataFrame pandas chamado 'df' com as colunas: "
                     "nome, sexo, instituicao, uf, nivel_bolsa, area_atuacao, "
-                    "ano_conclusao_doutorado, url_lattes, situacao. "
+                    "ano_conclusao_doutorado, url_lattes, situacao, formacao_academica, pos_doutorado. "
                     "REGRAS OBRIGATORIAS:\n"
                     "1. Responda SEMPRE em portugues.\n"
                     "2. Use o DataFrame para calcular respostas precisas.\n"
-                    "3. Cite numeros exatos.\n"
+                    "3. Cite numeros exatos baseados nos dados reais.\n"
                     "4. Se nao conseguir responder, diga: Nao tenho essa informacao nos dados disponiveis.\n"
                     "5. Seja direto e conciso.\n"
                     "6. Niveis de bolsa usam prefixo PQ-: PQ-1A, PQ-1B, PQ-1C, PQ-1D, PQ-2, PQ-A, PQ-B, PQ-C, PQ-SR.\n"
                     "7. Google Scholar nao esta disponivel no dataset.\n"
+                    "8. O campo 'uf' contem a sigla do estado (ex: SP, RJ, MG, BA).\n"
+                    "9. O campo 'sexo' contem Masculino ou Feminino.\n"
+                    "10. Nunca invente dados que nao existam no DataFrame.\n"
                 )
             )
 

@@ -13,3 +13,8 @@ langchain
 langchain-groq
 langchain-experimental
 tabulate
+langchain
+langchain-groq
+langchain-openai
+langchain-experimental
+tabulate
