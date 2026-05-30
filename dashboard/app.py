@@ -287,12 +287,21 @@ if pergunta:
                 temperature=0
             )
 
+            from langchain_groq import ChatGroq
+            from langchain_experimental.agents import create_pandas_dataframe_agent
+
+            llm = ChatGroq(
+                model="llama-3.1-8b-instant",
+                api_key=os.getenv("GROQ_API_KEY"),
+                temperature=0
+            )
+
             agent = create_pandas_dataframe_agent(
                 llm,
                 df_filtrado,
                 verbose=False,
-                agent_type="zero-shot-react-description",
                 allow_dangerous_code=True,
+                agent_executor_kwargs={"handle_parsing_errors": True},
                 prefix=(
                     "Voce e um assistente que responde perguntas sobre pesquisadores do CNPq. "
                     "Voce tem acesso a um DataFrame pandas chamado 'df' com as colunas: "
