@@ -279,7 +279,6 @@ if pergunta:
         try:
             from langchain_groq import ChatGroq
             from langchain_experimental.agents import create_pandas_dataframe_agent
-            from langchain_core.agents import AgentType
 
             llm = ChatGroq(
                 model="llama-3.1-8b-instant",
