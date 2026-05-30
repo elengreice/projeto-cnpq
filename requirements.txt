@@ -9,3 +9,7 @@ groq
 python-dotenv
 lxml
 gender-guesser
+langchain
+langchain-groq
+langchain-experimental
+tabulate
