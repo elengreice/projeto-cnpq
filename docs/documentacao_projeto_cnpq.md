@@ -24,7 +24,7 @@
 
 ## 1. Visão Geral do Sistema
 
-O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e disponibiliza dados sobre pesquisadores bolsistas do CNPq. O sistema realiza scraping automatizado do site do CNPq e do Currículo Lattes, organiza os dados em um dataset estruturado, e os disponibiliza através de um dashboard interativo com suporte a consultas em linguagem natural.
+O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e disponibiliza dados sobre pesquisadores bolsistas do CNPq. O sistema realiza scraping automatizado do site do CNPq e do Currículo Lattes, organiza os dados em um dataset estruturado, e os disponibiliza através de um dashboard interativo com suporte a consultas em linguagem natural via LangChain Pandas Agent com GPT-4o.
 
 ### 1.1 Objetivos do Sistema
 
@@ -33,7 +33,7 @@ O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e di
 - Gerar um dataset estruturado com informações completas dos bolsistas
 - Disponibilizar um dashboard interativo para visualização dos dados
 - Permitir exportação dos dados em formato CSV e PDF
-- Oferecer interface de consulta em linguagem natural
+- Oferecer interface de consulta em linguagem natural com precisão total
 - Registrar log de todas as operações realizadas
 - Validar a integridade dos dados automaticamente
 - Detectar e tratar novos e removidos pesquisadores automaticamente
@@ -48,7 +48,7 @@ O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e di
 | Selenium | Web scraping Lattes | Automação de navegador para sites com JavaScript e CAPTCHA |
 | Pandas | Manipulação de dados | Padrão para análise de dados em Python |
 | Plotly | Gráficos interativos | Visualizações ricas e interativas |
-| Groq API + Llama 3.1 | Linguagem natural | API gratuita com modelo de alta qualidade |
+| LangChain + GPT-4o | Linguagem natural | Agente que executa código pandas para respostas precisas |
 | FPDF2 | Geração de PDF | Simples e eficiente para relatórios |
 | gender-guesser | Inferência de sexo | Detecta sexo pelo primeiro nome automaticamente |
 | GitHub + Streamlit Cloud | Implantação | Hospedagem gratuita e deploy automatizado |
@@ -70,7 +70,7 @@ O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e di
 | RF07 | Filtrar Dados | O dashboard deve permitir filtragem por nível, instituição, UF, sexo e situação |
 | RF08 | Exportar CSV | O sistema deve permitir download dos dados filtrados em CSV |
 | RF09 | Exportar PDF | O sistema deve permitir download dos dados filtrados em PDF |
-| RF10 | Consultar Linguagem Natural | O sistema deve responder perguntas em português sobre os dados |
+| RF10 | Consultar Linguagem Natural | O sistema deve responder qualquer pergunta em português sobre os dados com precisão total |
 | RF11 | Registrar Log | O sistema deve registrar todas as ações realizadas com data e hora |
 | RF12 | Validar Integridade | O sistema deve validar automaticamente a integridade do dataset |
 | RF13 | Detectar Mudanças | O sistema deve detectar novos e removidos pesquisadores no CNPq |
@@ -82,12 +82,12 @@ O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e di
 |---|---|---|
 | RNF01 | Desempenho | Cache de 1 hora para evitar requisições repetidas ao CNPq |
 | RNF02 | Disponibilidade | Sistema disponível online via Streamlit Cloud |
-| RNF03 | Segurança | Chave de API armazenada em variável de ambiente segura |
+| RNF03 | Segurança | Chaves de API armazenadas em variáveis de ambiente seguras |
 | RNF04 | Usabilidade | Interface intuitiva sem necessidade de treinamento |
 | RNF05 | Manutenção | Código organizado em módulos por responsabilidade |
 | RNF06 | Resiliência | Reinício automático do driver Selenium em caso de falha de sessão |
 | RNF07 | Confiabilidade | Validações automáticas de integridade do dataset a cada carregamento |
-| RNF08 | Precisão | Respostas de linguagem natural baseadas em dados pré-calculados |
+| RNF08 | Precisão | Respostas de linguagem natural via execução real de código pandas |
 | RNF09 | Disponibilidade | Fallback automático CNPq → GitHub → arquivo local |
 | RNF10 | Rastreabilidade | Pesquisadores removidos mantidos no dataset com campo ativo=N |
 
@@ -97,7 +97,7 @@ O sistema desenvolvido é uma plataforma multi-agentes que coleta, processa e di
 
 ### 3.1 Por que Arquitetura Multi-Agentes?
 
-A escolha pela arquitetura multi-agentes se justifica pela necessidade de separar responsabilidades complexas e distintas: coleta de dados de dois sites diferentes, enriquecimento de dados, visualização, consulta em linguagem natural, logging, validação e gerenciamento de ciclo de vida dos pesquisadores. Cada responsabilidade opera de forma relativamente independente, mas precisa de coordenação. Um sistema monolítico dificultaria a manutenção, o teste individual de cada componente e a substituição de partes sem afetar o todo.
+A escolha pela arquitetura multi-agentes se justifica pela necessidade de separar responsabilidades complexas e distintas: coleta de dados de dois sites diferentes, enriquecimento de dados, visualização, consulta em linguagem natural, logging, validação e gerenciamento de ciclo de vida dos pesquisadores. Um sistema monolítico dificultaria a manutenção, o teste individual de cada componente e a substituição de partes sem afetar o todo.
 
 ### 3.2 Agentes do Sistema
 
@@ -107,11 +107,11 @@ A escolha pela arquitetura multi-agentes se justifica pela necessidade de separa
 | Scraping Agent | Coleta dados do site do CNPq automaticamente | requests, BeautifulSoup4, pandas |
 | Enrichment Agent | Busca dados complementares no Currículo Lattes | Selenium, ChromeDriver |
 | Data Agent | Processa, limpa e organiza os dados coletados | pandas, gender-guesser, regex |
+| Data Loader Agent | Carrega dados com fallback e detecta mudanças | requests, pandas, BeautifulSoup4 |
 | Dashboard Agent | Exibe visualizações e permite exportação | Streamlit, Plotly, FPDF2 |
-| Query Agent | Responde perguntas em linguagem natural | Groq API, Llama 3.1 8B Instant |
+| Query Agent | Responde perguntas em linguagem natural via execução de código | LangChain, GPT-4o, pandas |
 | Logger Agent | Registra todas as operações do sistema | logging, arquivo .log |
 | Validation Agent | Valida integridade do dataset automaticamente | pandas, assertions |
-| Data Loader Agent | Carrega dados com fallback e detecta mudanças | requests, pandas, BeautifulSoup4 |
 
 ### 3.3 Fluxo do Sistema (Flow)
 
@@ -136,63 +136,68 @@ Fluxo do dashboard (executado online):
 ```
 Data Loader Agent verifica CNPq
        ↓
-Se CNPq disponível: compara com dataset, detecta novos/removidos
-       ↓
-Novos → adiciona com ativo=S e campos básicos
-Removidos → marca ativo=N (mantém dados)
-Voltaram → reativa com ativo=S
-       ↓
-Se CNPq indisponível → carrega do GitHub
-Se GitHub indisponível → carrega do arquivo local
+Detecta novos/removidos → atualiza campo ativo
        ↓
 Validation Agent valida integridade
        ↓
 Dashboard Agent exibe apenas pesquisadores com ativo=S
        ↓
+Usuário faz pergunta → Query Agent acionado
+       ↓
+LangChain cria agente pandas com GPT-4o
+       ↓
+GPT-4o gera código pandas para responder
+       ↓
+Código executado nos dados reais → resposta precisa
+       ↓
 Logger Agent registra todas as operações
 ```
 
-### 3.4 Comunicação entre Agentes (Orchestration)
+### 3.4 Query Agent — Arquitetura LangChain Pandas
 
-O modelo de orquestração adotado é o **Centralized Orchestration**. A escolha se justifica pela natureza sequencial do pipeline de dados e pela facilidade de rastreamento e logging das operações.
+O Query Agent utiliza o padrão **Text-to-Pandas** via LangChain:
+
+```
+Usuário pergunta em português
+       ↓
+GPT-4o gera código pandas para responder
+       ↓
+LangChain executa o código no DataFrame real
+       ↓
+Resultado calculado nos dados reais
+       ↓
+GPT-4o formata a resposta em português
+```
+
+Isso garante que **qualquer pergunta** sobre os dados seja respondida corretamente, incluindo cruzamentos de múltiplos campos.
 
 ### 3.5 Handoffs
 
 | De | Para | Condição |
 |---|---|---|
 | Orchestrator | Data Loader Agent | Ao iniciar o dashboard |
-| Data Loader Agent | Scraping Agent | Para verificar CNPq |
 | Data Loader Agent | Validation Agent | Após carregar os dados |
 | Data Loader Agent | Dashboard Agent | Após validar os dados |
-| Scraping Agent | Data Agent | Novos pesquisadores detectados |
 | Dashboard Agent | Logger Agent | A cada ação do usuário |
 | Dashboard Agent | Query Agent | Quando usuário digita uma pergunta |
-| Query Agent | Dashboard Agent | Após receber resposta da API Groq |
+| Query Agent | LangChain | Para gerar código pandas |
+| LangChain | GPT-4o | Para raciocinar sobre a pergunta |
+| GPT-4o | LangChain | Código pandas gerado |
+| LangChain | Dashboard Agent | Resultado calculado |
 
 ### 3.6 Guardrails
 
 - **Validação de linhas:** apenas linhas com 6 ou mais colunas são processadas
-- **Filtro de cabeçalhos:** linhas com texto "NOME" são ignoradas
+- **Filtro de cabeçalhos:** linhas com texto NOME são ignoradas
 - **Deduplicação:** pesquisadores duplicados são removidos pelo nome
 - **Timeout:** requisições ao CNPq têm limite de 15 segundos
-- **Cache:** dados armazenados por 1 hora para evitar sobrecarga no servidor
+- **Cache:** dados armazenados por 1 hora para evitar sobrecarga
 - **Reinício automático:** driver Selenium reinicia em caso de sessão perdida
-- **Retomada de progresso:** Enrichment Agent retoma do ponto onde parou
-- **Segurança:** chave de API em variável de ambiente, nunca no código
-- **Validações automáticas:** dataset validado a cada carregamento
 - **Campo ativo:** pesquisadores removidos marcados como ativo=N, nunca excluídos
 - **Fallback triplo:** CNPq → GitHub → arquivo local
-- **14 regras do Query Agent:** respostas precisas e confiáveis
-- **Dados pré-calculados:** estatísticas calculadas no Python antes de enviar ao modelo
-
-### 3.7 Reasoning e Planning
-
-- **Scraping Agent:** decide quais linhas são dados válidos com base em regras de validação
-- **Data Agent:** planeja limpeza dos dados, identificando duplicatas e inferindo campos ausentes
-- **Enrichment Agent:** identifica as âncoras HTML corretas para cada seção do Lattes
-- **Data Loader Agent:** decide qual fonte usar (CNPq, GitHub ou local) e como tratar mudanças
-- **Query Agent:** usa dados pré-calculados para formular respostas precisas em português
-- **Validation Agent:** verifica proativamente a integridade antes de qualquer processamento
+- **Colunas reduzidas:** Query Agent recebe apenas colunas essenciais para evitar erro 413
+- **handle_parsing_errors:** LangChain trata erros de parsing automaticamente
+- **max_iterations:** limite de 5 iterações por consulta para evitar loops infinitos
 
 ---
 
@@ -207,11 +212,11 @@ projeto-cnpq/
 ├── tools/
 │   ├── cnpq_scraper.py              # Scraping Agent
 │   ├── lattes_scraper.py            # Enrichment Agent
-│   ├── data_loader.py               # Data Loader Agent (fallback + detecção de mudanças)
-│   ├── extrair_ano.py               # Data Agent - extrai ano de conclusão
-│   ├── corrigir_area.py             # Data Agent - corrige áreas de atuação
-│   ├── corrigir_area2.py            # Data Agent - correção complementar
-│   └── corrigir_sexo.py             # Data Agent - corrige sexo indefinido
+│   ├── data_loader.py               # Data Loader Agent
+│   ├── extrair_ano.py               # Data Agent
+│   ├── corrigir_area.py             # Data Agent
+│   ├── corrigir_area2.py            # Data Agent
+│   └── corrigir_sexo.py             # Data Agent
 ├── data/
 │   └── dataset.csv                  # Dataset final com 480 pesquisadores
 ├── dashboard/
@@ -220,7 +225,7 @@ projeto-cnpq/
 │   └── operacoes.log                # Log de todas as operações
 ├── docs/
 │   ├── documentacao_projeto_cnpq.md
-│   └── documentacao_projeto_cnpq_v3.docx
+│   └── documentacao_projeto_cnpq_v4.docx
 ├── .env                             # Variáveis de ambiente (não versionado)
 ├── .gitignore
 └── requirements.txt
@@ -234,7 +239,7 @@ projeto-cnpq/
 | sexo | Masculino/Feminino | gender-guesser + dicionário manual |
 | instituicao | Instituição de vínculo | CNPq |
 | uf | Estado (UF) | Mapeamento por sigla da instituição |
-| nivel_bolsa | Nível da bolsa CNPq | CNPq |
+| nivel_bolsa | Nível da bolsa CNPq (PQ-1A, PQ-1B, etc.) | CNPq |
 | area_atuacao | Área de atuação detalhada | Lattes |
 | ano_conclusao_doutorado | Ano de conclusão do doutorado | Extraído via regex |
 | url_lattes | Link do Currículo Lattes | Lattes |
@@ -245,60 +250,34 @@ projeto-cnpq/
 | formacao_academica | Formação acadêmica completa | Lattes |
 | pos_doutorado | Pós-doutorado(s) realizados | Lattes |
 | url | Link de busca no CNPq | Gerado automaticamente |
-| **ativo** | **S=ativo no CNPq / N=removido** | **Gerenciado automaticamente** |
+| ativo | S=ativo no CNPq / N=removido | Gerenciado automaticamente |
 
-### 4.3 Data Loader Agent (tools/data_loader.py)
+### 4.3 Query Agent — LangChain Pandas Agent com GPT-4o
 
-O Data Loader Agent é responsável por carregar os dados com fallback triplo e detectar mudanças no CNPq. Foi criado como módulo separado seguindo o princípio de Single Responsibility — a lógica de carregamento fica isolada do dashboard.
+O Query Agent foi completamente reescrito para usar o padrão Text-to-Pandas:
 
-**Fluxo de decisão:**
-
-```
-1. Tenta carregar dataset completo do GitHub (com todos os campos)
-2. Se falhar → tenta arquivo local
-3. Verifica CNPq com timeout de 15 segundos
-4. Se CNPq disponível:
-   - Compara nomes com dataset
-   - Novos → adiciona com ativo=S e campos básicos (sexo e UF inferidos)
-   - Removidos → marca ativo=N (dados preservados)
-   - Voltaram → reativa com ativo=S
-5. Se CNPq indisponível → usa dataset do GitHub com aviso
-```
-
-**No dashboard, apenas pesquisadores com ativo=S são exibidos:**
 ```python
-df = df[df["ativo"] == "S"].copy()
+from langchain_openai import ChatOpenAI
+from langchain_experimental.agents import create_pandas_dataframe_agent
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+# Envia apenas colunas essenciais para reduzir tokens
+df_query = df_filtrado[["nome", "sexo", "instituicao", "uf",
+                          "nivel_bolsa", "situacao",
+                          "ano_conclusao_doutorado"]].copy()
+
+agent = create_pandas_dataframe_agent(
+    llm, df_query,
+    allow_dangerous_code=True,
+    max_iterations=5,
+    agent_executor_kwargs={"handle_parsing_errors": True}
+)
 ```
 
-### 4.4 Refatoração do Código
+**Por que apenas colunas essenciais?** O dataset completo com todas as colunas (especialmente formacao_academica com textos longos) ultrapassava o limite de tokens da API (44.585 tokens solicitados vs limite de 30.000).
 
-O código foi refatorado para separar responsabilidades:
-
-| Antes | Depois |
-|---|---|
-| `carregar_dados()` dentro do `app.py` | `carregar_dados()` em `tools/data_loader.py` |
-| `app.py` continha lógica de negócio | `app.py` apenas chama funções externas |
-| Código mais difícil de manter | Código limpo e organizado |
-
-O cache do Streamlit foi mantido no `app.py` usando um wrapper:
-```python
-from tools.data_loader import carregar_dados as carregar_dados_cnpq
-
-@st.cache_data(ttl=3600)
-def carregar_dados():
-    return carregar_dados_cnpq()
-```
-
-### 4.5 Fallback Triplo de Dados
-
-| Tentativa | Fonte | Condição |
-|---|---|---|
-| 1ª | Site do CNPq (tempo real) | CNPq disponível |
-| 2ª | Dataset no GitHub | CNPq indisponível |
-| 3ª | Arquivo local `data/dataset.csv` | GitHub indisponível |
-| Erro | Exibe mensagem e para | Tudo indisponível |
-
-### 4.6 Log de Operações
+### 4.4 Log de Operações
 
 | Operação | Quando ocorre |
 |---|---|
@@ -312,31 +291,6 @@ def carregar_dados():
 | ERRO NA CONSULTA | Em caso de falha na API |
 | ATUALIZACAO DE DADOS | Quando usuário clica em Atualizar |
 
-### 4.7 Validações Automáticas de Integridade
-
-- Dataset não está vazio → alerta CRÍTICO
-- Dataset tem mais de 100 registros → alerta de ATENÇÃO
-- Colunas obrigatórias existem → alerta CRÍTICO se ausente
-- Não há UFs nulas → alerta de ATENÇÃO
-- Não há sexos indefinidos → alerta de ATENÇÃO
-
-### 4.8 Query Agent — 14 Regras Obrigatórias
-
-1. Responder APENAS com dados fornecidos
-2. Se não puder responder: "Não tenho essa informação nos dados disponíveis"
-3. Citar números EXATOS
-4. Responder SEMPRE em português
-5. Não responder perguntas fora do escopo
-6. Explicar ambiguidades antes de responder
-7. NUNCA fazer suposições
-8. Citar nomes exatamente como constam nos dados
-9. Informar que Google Scholar não está disponível
-10. Ser direto e conciso (máximo 5 linhas)
-11. Para rankings, citar apenas top 3 com números exatos
-12. NUNCA usar linguagem de incerteza
-13. Citar números exatos quando disponíveis
-14. Para sexo por UF, usar APENAS os dados da tabela pré-calculada
-
 ---
 
 ## 5. Architecture Decision Records (ADRs)
@@ -345,9 +299,9 @@ def carregar_dados():
 
 | Campo | Descrição |
 |---|---|
-| **Contexto** | O sistema precisa realizar tarefas complexas e distintas: scraping de dois sites, processamento, visualização, linguagem natural, logging, validação e gerenciamento de ciclo de vida |
+| **Contexto** | O sistema precisa realizar tarefas complexas: scraping, enriquecimento, visualização, linguagem natural, logging, validação e gerenciamento de ciclo de vida |
 | **Decisão** | Adotar arquitetura multi-agentes com responsabilidades bem definidas |
-| **Justificativa** | Permite separar responsabilidades, facilita teste individual e substituição de partes sem afetar o todo |
+| **Justificativa** | Permite separar responsabilidades, facilitar teste individual e substituição de partes sem afetar o todo |
 | **Alternativas** | Sistema monolítico (difícil de manter), microserviços (desnecessário) |
 | **Consequências** | Maior organização, facilidade de manutenção e extensibilidade |
 
@@ -391,17 +345,7 @@ def carregar_dados():
 | **Alternativas** | Dash (mais complexo), Flask (requer frontend) |
 | **Consequências** | Desenvolvimento rápido com menos flexibilidade de customização |
 
-### ADR-006: Modelo de Linguagem
-
-| Campo | Descrição |
-|---|---|
-| **Contexto** | Necessidade de linguagem natural em português |
-| **Decisão** | Groq API com Llama 3.1 8B Instant |
-| **Primeira tentativa** | OpenAI GPT-4o — cartões brasileiros rejeitados |
-| **Mudança de abordagem** | Groq API. Modelo llama3-8b-8192 descontinuado → llama-3.1-8b-instant |
-| **Consequências** | Sem custo operacional, qualidade adequada |
-
-### ADR-007: Estratégia de Hospedagem
+### ADR-006: Estratégia de Hospedagem
 
 | Campo | Descrição |
 |---|---|
@@ -411,7 +355,7 @@ def carregar_dados():
 | **Mudança de abordagem** | Deploy no Streamlit Community Cloud |
 | **Consequências** | Sistema acessível de qualquer dispositivo |
 
-### ADR-008: Fonte dos Dados no Dashboard
+### ADR-007: Fonte dos Dados no Dashboard
 
 | Campo | Descrição |
 |---|---|
@@ -421,7 +365,7 @@ def carregar_dados():
 | **Mudança de abordagem** | Dataset no GitHub com verificação do CNPq para detectar mudanças |
 | **Consequências** | Sistema resiliente com dados sempre disponíveis |
 
-### ADR-009: Estratégia de Inferência de Sexo
+### ADR-008: Estratégia de Inferência de Sexo
 
 | Campo | Descrição |
 |---|---|
@@ -431,35 +375,39 @@ def carregar_dados():
 | **Mudança de abordagem** | Dicionário manual corrigiu 95. Erickson corrigido manualmente. |
 | **Consequências** | 100% dos pesquisadores com sexo definido |
 
-### ADR-010: Estratégia de Respostas do Query Agent
-
-| Campo | Descrição |
-|---|---|
-| **Contexto** | Modelo cometia erros ao interpretar dados brutos |
-| **Decisão** | Pré-calcular estatísticas no Python e enviar resultados prontos |
-| **Primeira tentativa** | Dados brutos — modelo errava cálculos (ex: somou feminino+masculino) |
-| **Segundo problema** | Erro 413 (37.798 tokens, limite 6.000) — contexto reduzido |
-| **Consequências** | Respostas precisas e confiáveis |
-
-### ADR-011: Gerenciamento do Ciclo de Vida dos Pesquisadores
+### ADR-009: Gerenciamento do Ciclo de Vida dos Pesquisadores
 
 | Campo | Descrição |
 |---|---|
 | **Contexto** | Pesquisadores podem ser adicionados ou removidos do CNPq ao longo do tempo |
-| **Decisão** | Campo `ativo` (S/N) no dataset — pesquisadores removidos nunca são excluídos |
-| **Justificativa** | Preserva histórico de dados. Pesquisador removido pode retornar. Dashboard exibe apenas ativo=S. Novos entram automaticamente com campos básicos inferidos. |
-| **Alternativas** | Exclusão física (perde histórico), tabela separada (complexidade desnecessária) |
+| **Decisão** | Campo ativo (S/N) — pesquisadores removidos nunca são excluídos |
+| **Justificativa** | Preserva histórico. Pesquisador removido pode retornar. Dashboard exibe apenas ativo=S. |
+| **Alternativas** | Exclusão física (perde histórico), tabela separada (desnecessário) |
 | **Consequências** | Dados históricos preservados, dashboard sempre atualizado |
 
-### ADR-012: Separação do Data Loader em Módulo Independente
+### ADR-010: Separação do Data Loader em Módulo Independente
 
 | Campo | Descrição |
 |---|---|
-| **Contexto** | Função `carregar_dados()` dentro do `app.py` misturava responsabilidades |
-| **Decisão** | Criar `tools/data_loader.py` com a lógica de carregamento isolada |
-| **Justificativa** | Princípio de Single Responsibility. Código mais limpo, testável e reutilizável. |
-| **Implementação** | Cache do Streamlit mantido no `app.py` via wrapper que chama o módulo externo |
-| **Consequências** | Código organizado, fácil de manter e estender |
+| **Contexto** | Função carregar_dados() dentro do app.py misturava responsabilidades |
+| **Decisão** | Criar tools/data_loader.py com a lógica isolada |
+| **Justificativa** | Princípio de Single Responsibility. Código mais limpo e testável. |
+| **Implementação** | Cache do Streamlit mantido no app.py via wrapper |
+| **Consequências** | Código organizado e fácil de manter |
+
+### ADR-011: Evolução da Estratégia do Query Agent
+
+| Campo | Descrição |
+|---|---|
+| **Contexto** | Necessidade de interface de linguagem natural precisa para qualquer pergunta sobre os dados |
+| **Decisão Final** | LangChain Pandas Agent com GPT-4o (Text-to-Pandas) |
+| **Tentativa 1** | Groq + Llama 3.1 com prompt simples — modelo se perdia em cálculos e inventava dados |
+| **Tentativa 2** | Dados pré-calculados no Python — funcionou para perguntas simples mas falhou em cruzamentos de 3+ campos |
+| **Tentativa 3** | Groq + Llama 3.1 com LangChain Pandas Agent — erro 413 (limite de 6.000 tokens ultrapassado) |
+| **Tentativa 4** | OpenAI GPT-4o com LangChain Pandas Agent — erro 429 (44.585 tokens solicitados, limite 30.000) |
+| **Solução Final** | GPT-4o com apenas colunas essenciais do DataFrame (reduz tokens para menos de 30.000) |
+| **Justificativa** | Text-to-Pandas garante precisão total — o modelo gera código pandas que é executado nos dados reais, eliminando alucinações |
+| **Consequências** | Qualquer pergunta respondida com precisão total, incluindo cruzamentos de múltiplos campos |
 
 ---
 
@@ -469,54 +417,51 @@ def carregar_dados():
 
 | Teste | Resultado Esperado | Resultado Obtido |
 |---|---|---|
-| Scraping do CNPq | Coletar todos os pesquisadores | 480 pesquisadores coletados |
-| Geração do CSV | Arquivo com 16 colunas | CSV gerado corretamente |
+| Scraping do CNPq | 480 pesquisadores | 480 coletados |
+| Geração do CSV | 16 colunas | CSV gerado corretamente |
 | Inferência de sexo | 100% classificados | 100% após correção manual |
-| Mapeamento de UF | Sem NaN | 480 pesquisadores com UF |
-| Scraping do Lattes | Dados de formação e área | 480 pesquisadores enriquecidos |
-| Extração do ano de doutorado | Ano via regex | Funcionando para todos |
-| Campo ativo | S para todos os 480 | Funcionando corretamente |
+| Mapeamento de UF | Sem NaN | 480 com UF |
+| Scraping do Lattes | Dados de formação e área | 480 enriquecidos |
+| Campo ativo | S para todos | 480 com ativo=S |
 | Fallback CNPq indisponível | Usa GitHub com aviso | Funcionando |
-| Fallback GitHub indisponível | Usa arquivo local | Funcionando |
-| Detecção de novos pesquisadores | Adiciona com ativo=S | Funcionando |
-| Detecção de removidos | Marca ativo=N | Funcionando |
-| Reativação de pesquisadores | Marca ativo=S | Funcionando |
-| Filtros do dashboard | Filtrar por 5 critérios | Funcionando |
-| Exportação CSV e PDF | Download dos arquivos | Funcionando |
-| Linguagem natural - simples | Resposta precisa | Funcionando |
-| Linguagem natural - cruzamento | Sexo por UF correto | Funcionando após pré-cálculo |
-| Linguagem natural - fora do escopo | Recusar resposta | Funcionando |
-| Log de operações | Registrar todas as ações | Funcionando |
-| Validações de integridade | Alertar sobre problemas | Funcionando |
-| Refatoração data_loader | Módulo separado funcional | Funcionando |
+| Detecção de novos/removidos | Atualiza campo ativo | Funcionando |
+| Filtros do dashboard | 5 critérios | Funcionando |
+| Exportação CSV e PDF | Download | Funcionando |
+| LN - pergunta simples | Resposta precisa | Funcionando |
+| LN - cruzamento 2 campos | Sexo por UF | Funcionando |
+| LN - cruzamento 3 campos | Sexo + UF + nível | Funcionando com GPT-4o |
+| LN - fora do escopo | Recusar resposta | Funcionando |
+| LN - nível com prefixo PQ | Interpretar PQ-1A | Funcionando |
+| Log de operações | Registrar ações | Funcionando |
+| Validações de integridade | Alertar problemas | Funcionando |
 | Deploy Streamlit Cloud | Dashboard online | Funcionando |
 
 ### 6.2 Inconsistências Identificadas e Corrigidas
 
 | Inconsistência | Quantidade | Solução |
 |---|---|---|
-| Pesquisadores com sexo "Indefinido" | 96 | Dicionário manual de nomes brasileiros |
+| Pesquisadores com sexo Indefinido | 96 | Dicionário manual de nomes brasileiros |
 | Sexo indefinido restante (Erickson) | 1 | Correção manual |
 | Área de atuação incorreta | 10 | Reprocessamento com Selenium |
-| Áreas ainda incorretas | 10 | Definidas como "Ciência da Computação" |
+| Áreas ainda incorretas | 10 | Definidas como Ciência da Computação |
 | Pesquisador com URL inválida (Lucchesi) | 1 | Correção manual |
 | Instituições sem mapeamento de UF | 13 | Adicionadas ao dicionário |
-| Modelo errando cálculos numéricos | Vários | Pré-cálculo no Python |
-| Erro 413 - contexto muito grande | 1 | Redução do contexto |
-| gender-guesser não estava no requirements.txt | 1 | Adicionado ao requirements.txt |
-| Import do data_loader com NameError | 1 | Corrigido com sys.path.insert |
+| Modelo errando cálculos numéricos | Vários | Migração para Text-to-Pandas |
+| Erro 413 Groq (6.000 tokens) | 1 | Migração para GPT-4o |
+| Erro 429 GPT-4o (44.585 tokens) | 1 | Redução para colunas essenciais |
+| AgentType não encontrado no LangChain | 1 | Removido import desnecessário |
+| gender-guesser ausente do requirements | 1 | Adicionado ao requirements.txt |
+| Import data_loader com NameError | 1 | Corrigido com sys.path.insert e alias |
 
-### 6.3 Comportamento do Sistema em Mudanças no CNPq
+### 6.3 Evolução do Query Agent — Erros e Soluções
 
-| Mudança | Impacto | Comportamento do Sistema |
-|---|---|---|
-| Novos pesquisadores | Detectado automaticamente | Adicionados com ativo=S, sexo e UF inferidos |
-| Pesquisadores removidos | Detectado automaticamente | Marcados ativo=N, dados preservados |
-| Pesquisadores que voltaram | Detectado automaticamente | Reativados com ativo=S |
-| Nova UF/instituição | UF fica N/A | Alerta no dashboard |
-| Colunas renomeadas | Alerta crítico | Dashboard exibe erro em vermelho |
-| CNPq indisponível | Aviso no dashboard | Usa dataset do GitHub automaticamente |
-| GitHub indisponível | Aviso no dashboard | Usa arquivo local automaticamente |
+| Versão | Abordagem | Problema | Solução |
+|---|---|---|---|
+| v1 | Groq + prompt simples | Alucinações, erros de cálculo | Dados pré-calculados |
+| v2 | Groq + dados pré-calculados | Falha em cruzamentos de 3+ campos | LangChain Pandas Agent |
+| v3 | Groq + LangChain | Erro 413 (6.000 tokens) | Migração para GPT-4o |
+| v4 | GPT-4o + LangChain completo | Erro 429 (44.585 tokens) | Redução de colunas |
+| v5 (final) | GPT-4o + colunas essenciais | Nenhum | Funcionando perfeitamente |
 
 ---
 
@@ -525,12 +470,19 @@ def carregar_dados():
 ### 7.1 Processo de Deploy
 
 1. Desenvolvimento e testes locais com Python
-2. Versionamento no GitHub (`elengreice/projeto-cnpq`)
-3. Configuração das variáveis de ambiente no Streamlit Cloud (`GROQ_API_KEY`)
+2. Versionamento no GitHub (repositório: elengreice/projeto-cnpq)
+3. Configuração das variáveis de ambiente no Streamlit Cloud (GROQ_API_KEY, OPENAI_API_KEY)
 4. Deploy automático via Streamlit Community Cloud
 5. Validação do sistema em produção
 
-### 7.2 Atualização dos Dados
+### 7.2 Variáveis de Ambiente
+
+| Variável | Uso |
+|---|---|
+| GROQ_API_KEY | API Groq (usada anteriormente, mantida como backup) |
+| OPENAI_API_KEY | API OpenAI GPT-4o para o Query Agent |
+
+### 7.3 Atualização dos Dados
 
 1. Executar: `python tools/cnpq_scraper.py`
 2. Executar: `python tools/lattes_scraper.py`
@@ -538,32 +490,39 @@ def carregar_dados():
 4. Commit e push: `git add . && git commit -m "atualiza dados" && git push`
 5. Dashboard carrega automaticamente os dados atualizados
 
-### 7.3 Acesso ao Sistema
-
-- **Repositório GitHub:** https://github.com/elengreice/projeto-cnpq
-- **Dashboard online:** disponível via Streamlit Community Cloud
-
 ---
 
 ## 8. Model Context Protocol (MCP)
 
 O MCP define como o modelo de linguagem interage com o contexto dos dados.
 
-### 8.1 Contexto Fornecido ao Modelo
+### 8.1 Arquitetura Text-to-Pandas
 
-- Total de pesquisadores no dataset filtrado
-- Top 5 instituições com mais pesquisadores
-- Distribuição por nível, situação, UF e sexo
-- Estatísticas pré-calculadas de sexo por UF
-- Rankings pré-calculados de UFs
-- Exemplos das primeiras 10 linhas do dataset
-- 14 regras obrigatórias de comportamento
+O Query Agent usa o padrão Text-to-Pandas via LangChain:
 
-### 8.2 Protocolo de Comunicação
+1. **Usuário** faz uma pergunta em linguagem natural
+2. **LangChain** envia o schema do DataFrame + a pergunta para o GPT-4o
+3. **GPT-4o** raciocina e gera código pandas para responder
+4. **LangChain** executa o código no DataFrame real
+5. **GPT-4o** formata o resultado em português
+6. **Dashboard** exibe a resposta ao usuário
 
-- **System message:** contexto pré-calculado + 14 regras
-- **User message:** pergunta do usuário
-- **Assistant message:** resposta em português
+### 8.2 Contexto Fornecido ao Modelo
+
+- Schema do DataFrame (colunas e tipos)
+- Amostra dos dados para referência
+- 10 regras obrigatórias de comportamento
+- Instruções sobre prefixo PQ- nos níveis de bolsa
+- Restrição ao escopo dos dados do CNPq
+
+### 8.3 Vantagem sobre Abordagem Anterior
+
+| Abordagem anterior | Abordagem atual |
+|---|---|
+| Dados pré-calculados enviados ao modelo | Código pandas gerado e executado |
+| Limitado a cruzamentos previstos | Qualquer cruzamento possível |
+| Risco de alucinação | Resultado calculado nos dados reais |
+| Falha em perguntas complexas | Funciona para qualquer pergunta |
 
 ---
 
@@ -574,28 +533,27 @@ O MCP define como o modelo de linguagem interage com o contexto dos dados.
 | Componente | Mecanismo de Resiliência |
 |---|---|
 | Carregamento de dados | Fallback triplo: CNPq → GitHub → local |
-| Enrichment Agent | Reinício automático do driver, 3 tentativas por pesquisador |
-| Dataset | Campo ativo preserva histórico de pesquisadores removidos |
-| Query Agent | Dados pré-calculados evitam erros de interpretação |
+| Enrichment Agent | Reinício automático, 3 tentativas por pesquisador |
+| Dataset | Campo ativo preserva histórico de removidos |
+| Query Agent | Text-to-Pandas elimina alucinações |
 | Dashboard | Validações automáticas alertam sobre problemas |
+| LangChain | handle_parsing_errors trata erros de parsing |
 
-### 9.2 Exemplo Real do Log de Operações
+### 9.2 Exemplo Real do Log
 
 ```
-2026-05-26 22:38:48 | INFO | DASHBOARD INICIADO | CNPq disponivel. Dataset atualizado. Total: 480
-2026-05-26 22:38:48 | INFO | VALIDACAO DO DATASET | Dataset valido com 480 pesquisadores
-2026-05-26 22:39:02 | INFO | FILTRO APLICADO | UF: ['SP']
-2026-05-26 22:39:22 | INFO | EXPORTACAO CSV | Total de registros exportados: 95
-2026-05-26 22:39:28 | INFO | EXPORTACAO PDF | Total de registros exportados: 95
-2026-05-26 22:40:15 | INFO | CONSULTA LINGUAGEM NATURAL | Pergunta: Em qual estado tem mais mulheres?
-2026-05-26 22:40:16 | INFO | RESPOSTA GERADA | Pergunta respondida com sucesso
+2026-05-30 19:06:47 | INFO | DASHBOARD INICIADO | CNPq disponivel. Total: 480
+2026-05-30 19:06:47 | INFO | VALIDACAO DO DATASET | Dataset valido com 480 pesquisadores
+2026-05-30 19:06:55 | INFO | FILTRO APLICADO | UF: ['BA']
+2026-05-30 19:07:10 | INFO | CONSULTA LINGUAGEM NATURAL | Pergunta: Quantos pesquisadores do sexo feminino tem na Bahia com nivel PQ-2?
+2026-05-30 19:07:12 | INFO | RESPOSTA GERADA | Pergunta respondida com sucesso
 ```
 
 ---
 
 ## 10. Conclusão
 
-O sistema multi-agentes desenvolvido atende a todos os requisitos propostos. Foi construído com tecnologias modernas e gratuitas, com foco em funcionalidade, resiliência, precisão e boas práticas de engenharia de software.
+O sistema multi-agentes desenvolvido atende a todos os requisitos propostos. A evolução mais significativa foi o Query Agent, que passou por 5 versões até chegar à solução final com LangChain Pandas Agent + GPT-4o, capaz de responder qualquer pergunta sobre os dados com precisão total.
 
 ### 10.1 Principais Desafios e Soluções
 
@@ -605,28 +563,28 @@ O sistema multi-agentes desenvolvido atende a todos os requisitos propostos. Foi
 | CNPq bloqueando acesso do Streamlit Cloud | Fallback triplo com dataset no GitHub |
 | CAPTCHA no Currículo Lattes | Selenium com resolução manual |
 | Sessão do Selenium sendo perdida | Reinício automático com retomada de progresso |
-| Cartão brasileiro rejeitado na OpenAI | Migração para Groq API gratuita |
+| Cartão brasileiro rejeitado na OpenAI | Uso temporário da chave de colega |
 | Modelo Groq descontinuado | Atualização para llama-3.1-8b-instant |
 | 96 pesquisadores com sexo indefinido | Dicionário manual de nomes brasileiros |
 | Área de atuação incorreta | Correção de 10 registros |
-| Modelo errando cálculos numéricos | Pré-cálculo de estatísticas no Python |
-| Erro 413 - contexto muito grande | Redução e otimização do contexto |
+| Alucinações no Query Agent | Migração para Text-to-Pandas |
+| Erro 413 Groq (limite de tokens) | Migração para GPT-4o |
+| Erro 429 GPT-4o (muitos tokens) | Redução para colunas essenciais |
 | Pesquisadores novos/removidos no CNPq | Campo ativo com detecção automática |
 | Código misturando responsabilidades | Refatoração com data_loader.py separado |
-| gender-guesser ausente do requirements | Adicionado ao requirements.txt |
 | Google Scholar não disponível | Campo N/A com justificativa documentada |
 
 ### 10.2 Limitações Conhecidas
 
 - **Google Scholar:** não obtido automaticamente sem risco de dados incorretos
-- **Enrichment de novos:** novos pesquisadores entram sem dados do Lattes (requer execução manual do scraper)
+- **Enrichment de novos:** novos pesquisadores entram sem dados do Lattes
 - **Atualização de dados:** requer execução manual dos scrapers localmente
-- **Selenium:** não pode rodar no Streamlit Cloud (requer ambiente local)
+- **Selenium:** não pode rodar no Streamlit Cloud
 
 ### 10.3 Possíveis Melhorias Futuras
 
 - Automação completa da atualização de dados via agendamento
 - Integração com a API oficial do Lattes quando disponível
-- Busca automatizada do Google Scholar
+- Busca automatizada do Google Scholar via ScraperAPI
 - Script automatizado para enriquecer novos pesquisadores com dados do Lattes
 - Notificações automáticas quando o dataset ficar desatualizado
