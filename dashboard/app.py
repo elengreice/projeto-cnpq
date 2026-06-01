@@ -9,6 +9,10 @@ from groq import Groq
 from dotenv import load_dotenv
 from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
+sys.path.insert(0, ".")
+
+load_dotenv()
+
 INSTITUICAO_UF = {
     "UFAM": "AM", "UEA": "AM", "UFPA": "PA", "UEPA": "PA",
     "UFMA": "MA", "UEMA": "MA", "UFC": "CE", "UECE": "CE",
@@ -38,10 +42,6 @@ def inferir_uf(instituicao):
         if sigla.upper() in inst_upper:
             return uf
     return "N/A"
-
-sys.path.insert(0, ".")
-
-load_dotenv()
 
 # ── Configuracao do Log ─────────────────────────────────────────────
 os.makedirs("logs", exist_ok=True)
