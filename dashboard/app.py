@@ -7,10 +7,39 @@ import sys
 from fpdf import FPDF
 from groq import Groq
 from dotenv import load_dotenv
-from tools.data_loader import carregar_dados as carregar_dados_cnpq, inferir_uf
+from tools.data_loader import carregar_dados as carregar_dados_cnpq
+
+INSTITUICAO_UF = {
+    "UFAM": "AM", "UEA": "AM", "UFPA": "PA", "UEPA": "PA",
+    "UFMA": "MA", "UEMA": "MA", "UFC": "CE", "UECE": "CE",
+    "URCA": "CE", "IFCE": "CE", "UFPI": "PI", "UESPI": "PI",
+    "UFPB": "PB", "UEPB": "PB", "UFPE": "PE", "UPE": "PE",
+    "UFRPE": "PE", "UFRN": "RN", "UERN": "RN", "UFAL": "AL",
+    "UFS": "SE", "UFBA": "BA", "UEFS": "BA", "UESC": "BA",
+    "UESB": "BA", "UNEB": "BA", "UFMG": "MG", "UFJF": "MG",
+    "UFV": "MG", "UFOP": "MG", "UFU": "MG", "CEFET/MG": "MG",
+    "PUC MINAS": "MG", "UFRJ": "RJ", "UFF": "RJ", "UERJ": "RJ",
+    "PUC-RIO": "RJ", "UNIRIO": "RJ", "CEFET/RJ": "RJ", "LNCC": "RJ",
+    "FGV": "RJ", "USP": "SP", "UNICAMP": "SP", "UNESP": "SP",
+    "UNIFESP": "SP", "UFSCar": "SP", "ITA": "SP", "UFABC": "SP",
+    "MACKENZIE": "SP", "FEI": "SP", "UFPR": "PR", "UEL": "PR",
+    "UEM": "PR", "UTFPR": "PR", "PUC/PR": "PR", "UFSC": "SC",
+    "UDESC": "SC", "UFRGS": "RS", "PUCRS": "RS", "UNISINOS": "RS",
+    "FURG": "RS", "UNIJUI": "RS", "UNIPAMPA": "RS", "UFG": "GO",
+    "UFMT": "MT", "UFMS": "MS", "UnB": "DF", "UFES": "ES",
+    "UFAC": "AC", "UFRR": "RR", "UNIFAP": "AP", "UFRO": "RO",
+    "UFT": "TO", "ITV": "PA", "INMETRO": "RJ", "UNIFOR": "CE",
+    "UFDPAR": "PI", "UFDPar": "PI",
+}
+
+def inferir_uf(instituicao):
+    inst_upper = instituicao.upper()
+    for sigla, uf in INSTITUICAO_UF.items():
+        if sigla.upper() in inst_upper:
+            return uf
+    return "N/A"
 
 sys.path.insert(0, ".")
-#from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
 load_dotenv()
 
