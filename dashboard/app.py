@@ -54,48 +54,54 @@ elif status_dados == "cnpq_atualizado":
     st.info(f"ℹ️ Ha {novos} novos pesquisadores e {removidos} removidos desde a ultima atualizacao.")
     log_info("DASHBOARD INICIADO", f"CNPq com mudancas. Novos: {novos}, Removidos: {removidos}")
 
-    st.warning(f"Os seguintes pesquisadores ainda nao tem dados do Lattes: {', '.join(nomes_novos[:5])}{'...' if len(nomes_novos) > 5 else ''}")
+    if nomes_novos:
+        st.warning(f"Novos pesquisadores sem dados completos: {', '.join(nomes_novos)}")
 
-    for nome_novo in nomes_novos:
-        st.write(f"**{nome_novo}**")
-        col1, col2 = st.columns(2)
+        if st.button("📥 Gerar arquivo de atualizacao"):
+            # Monta o dataframe dos novos
+            import gender_guesser.detector as gender_mod
+            d = gender_mod.Detector()
 
-        # Botao 1: Abre o Lattes no navegador
-        url_busca = "https://buscatextual.cnpq.br/buscatextual/busca.do"
-        with col1:
-            st.link_button("🔍 Buscar no Lattes", url_busca)
-            st.caption(f"Busque por: **{nome_novo}**")
+            def inf_sexo(nome):
+                pn = nome.strip().split()[0].capitalize()
+                r = d.get_gender(pn)
+                m = {"male": "Masculino", "female": "Feminino",
+                     "mostly_male": "Masculino", "mostly_female": "Feminino"}
+                return m.get(r, "Indefinido")
 
-        # Botao 2: Abre formulario manual
-        with col2:
-            if st.button(f"📝 Preencher manualmente", key=f"form_{nome_novo}"):
-                st.session_state[f"show_form_{nome_novo}"] = True
+            registros = []
+            for nome in nomes_novos:
+                inst = df[df["nome"] == nome]["instituicao"].values
+                instituicao = inst[0] if len(inst) > 0 else "N/A"
+                nivel = df[df["nome"] == nome]["nivel_bolsa"].values
+                nivel_bolsa = nivel[0] if len(nivel) > 0 else "N/A"
+                registros.append({
+                    "nome": nome,
+                    "sexo": inf_sexo(nome),
+                    "instituicao": instituicao,
+                    "uf": inferir_uf(instituicao) if instituicao != "N/A" else "N/A",
+                    "nivel_bolsa": nivel_bolsa,
+                    "situacao": "N/A",
+                })
 
-        # Formulario manual
-        if st.session_state.get(f"show_form_{nome_novo}", False):
-            with st.form(key=f"formulario_{nome_novo}"):
-                st.subheader(f"Dados do Lattes - {nome_novo}")
-                url_lattes = st.text_input("URL do Lattes", placeholder="http://lattes.cnpq.br/...")
-                formacao = st.text_area("Formacao Academica", placeholder="Ex: 2005 - 2009 | Doutorado em Ciencia da Computacao...")
-                pos_doc = st.text_area("Pos-Doutorado", placeholder="Ex: 2010 - 2011 | Pos-Doutorado em...")
-                area = st.text_input("Area de Atuacao", placeholder="Ex: Grande area: Ciencias Exatas / Area: Ciencia da Computacao")
-                ano = st.text_input("Ano de Conclusao do Doutorado", placeholder="Ex: 2009")
+            df_novos = pd.DataFrame(registros)
+            os.makedirs("atualizacoes", exist_ok=True)
+            df_novos.to_csv("atualizacoes/novos_pesquisadores.csv", index=False, encoding="utf-8-sig")
 
-                submitted = st.form_submit_button("Salvar dados")
-                if submitted:
-                    idx = df[df["nome"] == nome_novo].index
-                    if len(idx) > 0:
-                        df.at[idx[0], "url_lattes"] = url_lattes
-                        df.at[idx[0], "formacao_academica"] = formacao
-                        df.at[idx[0], "pos_doutorado"] = pos_doc
-                        df.at[idx[0], "area_atuacao"] = area
-                        df.at[idx[0], "ano_conclusao_doutorado"] = ano
-                        df.at[idx[0], "google_scholar"] = f"https://scholar.google.com/scholar?q={nome_novo.replace(' ', '+')}"
-                        df.to_csv("data/dataset.csv", index=False, encoding="utf-8-sig")
-                        log_info("DADOS LATTES PREENCHIDOS MANUALMENTE", f"Pesquisador: {nome_novo}")
-                        st.success(f"Dados de {nome_novo} salvos com sucesso!")
-                        st.session_state[f"show_form_{nome_novo}"] = False
-                        st.rerun()
+            st.success("✅ Arquivo gerado em atualizacoes/novos_pesquisadores.csv")
+            log_info("ARQUIVO DE ATUALIZACAO GERADO", f"Novos pesquisadores: {nomes_novos}")
+
+            st.info("Para atualizar o dataset, rode o comando abaixo no terminal do seu computador:")
+            st.code("python atualizacoes/atualizar_dataset.py", language="bash")
+
+            # Permite download do arquivo
+            csv_novos = df_novos.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+            st.download_button(
+                label="⬇️ Baixar arquivo de novos pesquisadores",
+                data=csv_novos,
+                file_name="novos_pesquisadores.csv",
+                mime="text/csv"
+            )
 
 elif status_dados == "github":
     st.warning("⚠️ Site do CNPq indisponivel. Exibindo dados da ultima atualizacao.")
