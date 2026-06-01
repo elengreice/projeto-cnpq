@@ -110,8 +110,9 @@ df_novos = df_novos[colunas]
 df_atualizado = pd.concat([df, df_novos], ignore_index=True)
 df_atualizado = df_atualizado.drop_duplicates(subset=["nome"])
 
-# Salva o dataset
+# Salva o dataset ordenado alfabeticamente
 print("\n5. Salvando dataset atualizado...")
+df_atualizado = df_atualizado.sort_values("nome").reset_index(drop=True)
 df_atualizado.to_csv("data/dataset.csv", index=False, encoding="utf-8-sig")
 print(f"   Dataset salvo: {len(df_atualizado)} pesquisadores")
 
