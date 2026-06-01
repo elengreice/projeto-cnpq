@@ -7,9 +7,9 @@ import sys
 from fpdf import FPDF
 from groq import Groq
 from dotenv import load_dotenv
-from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
-sys.path.insert(0, ".")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
 load_dotenv()
 
