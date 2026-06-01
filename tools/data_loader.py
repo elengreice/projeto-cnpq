@@ -90,7 +90,7 @@ def carregar_dados():
         try:
             df_completo = pd.read_csv("data/dataset.csv")
         except:
-            return None, "erro", 0, 0
+            return None, "erro", 0, 0, []
 
     # Garante que o campo ativo existe
     if "ativo" not in df_completo.columns:
@@ -164,9 +164,10 @@ def carregar_dados():
                 df_completo.loc[df_completo["nome"].isin(voltaram), "ativo"] = "S"
 
             status = "cnpq_atualizado" if (novos or removidos) else "cnpq_ok"
-            return df_completo, status, len(novos), len(removidos)
+            nomes_novos = list(novos)
+            return df_completo, status, len(novos), len(removidos), nomes_novos
 
     except:
-        pass
+        return df_completo, "github", 0, 0, []
 
-    return df_completo, "github", 0, 0
+    return df_completo, "cnpq_ok", 0, 0, []

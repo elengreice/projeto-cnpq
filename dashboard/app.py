@@ -41,7 +41,7 @@ st.title("Dashboard - Pesquisadores CNPq")
 def carregar_dados():
     return carregar_dados_cnpq()
 
-df, status_dados, novos, removidos = carregar_dados()
+df, status_dados, novos, removidos, nomes_novos = carregar_dados()
 
 # Filtra apenas pesquisadores ativos para o dashboard
 df = df[df["ativo"] == "S"].copy()
@@ -53,6 +53,51 @@ if status_dados == "cnpq_ok":
 elif status_dados == "cnpq_atualizado":
     st.info(f"ℹ️ Ha {novos} novos pesquisadores e {removidos} removidos desde a ultima atualizacao.")
     log_info("DASHBOARD INICIADO", f"CNPq com mudancas. Novos: {novos}, Removidos: {removidos}")
+
+    # Pega os nomes dos novos pesquisadores
+    nomes_novos = list(set(pesquisadores_cnpq.keys()) - set(df["nome"].tolist()))
+
+    st.warning(f"Os seguintes pesquisadores ainda nao tem dados do Lattes: {', '.join(nomes_novos[:5])}{'...' if len(nomes_novos) > 5 else ''}")
+
+    for nome_novo in nomes_novos:
+        st.write(f"**{nome_novo}**")
+        col1, col2 = st.columns(2)
+
+        # Botao 1: Abre o Lattes no navegador
+        url_busca = f"https://buscatextual.cnpq.br/buscatextual/busca.do?metodo=apresentar&termo={nome_novo.replace(' ', '+')}"
+        with col1:
+            st.link_button("🔍 Buscar no Lattes", url_busca)
+
+        # Botao 2: Abre formulario manual
+        with col2:
+            if st.button(f"📝 Preencher manualmente", key=f"form_{nome_novo}"):
+                st.session_state[f"show_form_{nome_novo}"] = True
+
+        # Formulario manual
+        if st.session_state.get(f"show_form_{nome_novo}", False):
+            with st.form(key=f"formulario_{nome_novo}"):
+                st.subheader(f"Dados do Lattes - {nome_novo}")
+                url_lattes = st.text_input("URL do Lattes", placeholder="http://lattes.cnpq.br/...")
+                formacao = st.text_area("Formacao Academica", placeholder="Ex: 2005 - 2009 | Doutorado em Ciencia da Computacao...")
+                pos_doc = st.text_area("Pos-Doutorado", placeholder="Ex: 2010 - 2011 | Pos-Doutorado em...")
+                area = st.text_input("Area de Atuacao", placeholder="Ex: Grande area: Ciencias Exatas / Area: Ciencia da Computacao")
+                ano = st.text_input("Ano de Conclusao do Doutorado", placeholder="Ex: 2009")
+
+                submitted = st.form_submit_button("Salvar dados")
+                if submitted:
+                    idx = df[df["nome"] == nome_novo].index
+                    if len(idx) > 0:
+                        df.at[idx[0], "url_lattes"] = url_lattes
+                        df.at[idx[0], "formacao_academica"] = formacao
+                        df.at[idx[0], "pos_doutorado"] = pos_doc
+                        df.at[idx[0], "area_atuacao"] = area
+                        df.at[idx[0], "ano_conclusao_doutorado"] = ano
+                        df.at[idx[0], "google_scholar"] = f"https://scholar.google.com/scholar?q={nome_novo.replace(' ', '+')}"
+                        df.to_csv("data/dataset.csv", index=False, encoding="utf-8-sig")
+                        log_info("DADOS LATTES PREENCHIDOS MANUALMENTE", f"Pesquisador: {nome_novo}")
+                        st.success(f"Dados de {nome_novo} salvos com sucesso!")
+                        st.session_state[f"show_form_{nome_novo}"] = False
+                        st.rerun()
 
 elif status_dados == "github":
     st.warning("⚠️ Site do CNPq indisponivel. Exibindo dados da ultima atualizacao.")
