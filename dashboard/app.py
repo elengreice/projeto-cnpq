@@ -61,9 +61,10 @@ elif status_dados == "cnpq_atualizado":
         col1, col2 = st.columns(2)
 
         # Botao 1: Abre o Lattes no navegador
-        url_busca = f"https://buscatextual.cnpq.br/buscatextual/busca.do?metodo=apresentar&termo={nome_novo.replace(' ', '+')}"
+        url_busca = "https://buscatextual.cnpq.br/buscatextual/busca.do"
         with col1:
             st.link_button("🔍 Buscar no Lattes", url_busca)
+            st.caption(f"Busque por: **{nome_novo}**")
 
         # Botao 2: Abre formulario manual
         with col2:
