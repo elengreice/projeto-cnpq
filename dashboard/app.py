@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from tools.data_loader import carregar_dados as carregar_dados_cnpq, inferir_uf
 
 sys.path.insert(0, ".")
-from tools.data_loader import carregar_dados as carregar_dados_cnpq
+#from tools.data_loader import carregar_dados as carregar_dados_cnpq
 
 load_dotenv()
 
