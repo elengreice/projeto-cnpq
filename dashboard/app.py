@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from fpdf import FPDF
-from groq import Groq
-from dotenv import load_dotenv
 import os
 import logging
 import sys
+from fpdf import FPDF
+from groq import Groq
+from dotenv import load_dotenv
+from tools.data_loader import carregar_dados as carregar_dados_cnpq, inferir_uf
 
 sys.path.insert(0, ".")
 from tools.data_loader import carregar_dados as carregar_dados_cnpq
