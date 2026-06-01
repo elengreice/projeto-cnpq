@@ -54,9 +54,6 @@ elif status_dados == "cnpq_atualizado":
     st.info(f"ℹ️ Ha {novos} novos pesquisadores e {removidos} removidos desde a ultima atualizacao.")
     log_info("DASHBOARD INICIADO", f"CNPq com mudancas. Novos: {novos}, Removidos: {removidos}")
 
-    # Pega os nomes dos novos pesquisadores
-    nomes_novos = list(set(pesquisadores_cnpq.keys()) - set(df["nome"].tolist()))
-
     st.warning(f"Os seguintes pesquisadores ainda nao tem dados do Lattes: {', '.join(nomes_novos[:5])}{'...' if len(nomes_novos) > 5 else ''}")
 
     for nome_novo in nomes_novos:
