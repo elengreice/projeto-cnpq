@@ -301,9 +301,10 @@ st.divider()
 
 # ── Tabela de dados ─────────────────────────────────────────────────
 st.subheader("Dados dos Pesquisadores")
-colunas_exibir = ["nome", "sexo", "instituicao", "uf", "nivel_bolsa",
-                  "area_atuacao", "ano_conclusao_doutorado", "url_lattes",
-                  "google_scholar", "situacao"]
+colunas_desejadas = ["nome", "sexo", "instituicao", "uf", "nivel_bolsa",
+                     "area_atuacao", "ano_conclusao_doutorado", "url_lattes",
+                     "google_scholar", "situacao"]
+colunas_exibir = [c for c in colunas_desejadas if c in df_filtrado.columns]
 st.dataframe(df_filtrado[colunas_exibir], use_container_width=True)
 
 st.divider()
